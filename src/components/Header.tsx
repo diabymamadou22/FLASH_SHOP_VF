@@ -4,6 +4,7 @@ import {
   BarChart3,
   Bell,
   Boxes,
+  CreditCard,
   History,
   Home,
   LayoutGrid,
@@ -33,6 +34,7 @@ const TITRES_PAGES: Record<PageId, { titre: string; icone: typeof Home }> = {
   produits: { titre: 'Produits', icone: Package },
   categories: { titre: 'Catégories', icone: LayoutGrid },
   caisse: { titre: 'Ventes (Caisse)', icone: ShoppingCart },
+  credits: { titre: 'Crédits clients', icone: CreditCard },
   historique: { titre: 'Historique des ventes', icone: History },
   stocks: { titre: 'Stocks', icone: Boxes },
   depenses: { titre: 'Dépenses', icone: Wallet },
@@ -55,7 +57,7 @@ export default function Header({
   const peutVoirParametres = peutAccederPage(session.role, 'parametres');
 
   return (
-    <header className="no-print sticky top-0 z-20 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-3 sm:h-16 sm:px-6">
+    <header className="no-print pt-safe sticky top-0 z-20 flex min-h-14 items-center justify-between gap-2 border-b border-slate-200 bg-white px-2.5 sm:min-h-16 sm:px-6">
       {/* Zone gauche : bouton mobile + titre de page */}
       <div className="flex min-w-0 items-center gap-2 sm:gap-3">
         <button
@@ -151,7 +153,14 @@ export default function Header({
         >
           <UserCircle2 className="h-6 w-6 shrink-0 text-[#0A3072]" />
           <div className="hidden sm:block">
-            <div className="text-xs font-semibold text-slate-900">{session.nom}</div>
+            <div className="text-xs font-semibold text-slate-900">
+              {session.nom}
+              {session.nomUtilisateur && session.nomUtilisateur !== session.nom && (
+                <span className="ml-1 font-mono text-[11px] font-normal text-slate-500">
+                  (@{session.nomUtilisateur})
+                </span>
+              )}
+            </div>
             <div className="text-[11px] text-slate-500">{LIBELLES_ROLE[session.role]}</div>
           </div>
         </button>

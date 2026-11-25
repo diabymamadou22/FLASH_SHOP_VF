@@ -19,6 +19,7 @@ export const PAGES_PAR_ROLE: Record<RoleUtilisateur, PageId[]> = {
     'produits',
     'categories',
     'caisse',
+    'credits',
     'historique',
     'stocks',
     'depenses',
@@ -30,14 +31,15 @@ export const PAGES_PAR_ROLE: Record<RoleUtilisateur, PageId[]> = {
     'produits',
     'categories',
     'caisse',
+    'credits',
     'historique',
     'stocks',
     'depenses',
     'rapports',
     'parametres',
   ],
-  comptable: ['dashboard', 'historique', 'depenses', 'rapports'],
-  caissier: ['produits', 'caisse', 'historique'],
+  comptable: ['dashboard', 'credits', 'historique', 'depenses', 'rapports'],
+  caissier: ['produits', 'caisse', 'credits', 'historique'],
 };
 
 /**
@@ -64,31 +66,39 @@ export function verifierMotDePasseSuperAdmin(saisie: string): boolean {
 }
 
 /**
- * Authentifie uniquement avec le mot de passe :
- * - Vérifie d'abord le mot de passe principal (invisible dans Paramètres)
+ * Authentifie avec le nom d'utilisateur et le mot de passe :
+ * - Vérifie d'abord le compte administrateur principal ("admin")
  * - Sinon cherche parmi les utilisateurs créés dans Paramètres
  */
-export function authentifierParMotDePasse(
+export function authentifierUtilisateur(
+  nomUtilisateur: string,
   motDePasse: string,
   utilisateurs: Utilisateur[]
 ): SessionUtilisateur | null {
+  const pseudoPropre = nomUtilisateur.trim().replace(/^@/, '').toLowerCase();
   const mdpPropre = motDePasse.trim();
-  if (!mdpPropre) return null;
+  if (!pseudoPropre || !mdpPropre) return null;
 
-  if (verifierMotDePasseSuperAdmin(mdpPropre)) {
+  if (pseudoPropre === 'admin' && verifierMotDePasseSuperAdmin(mdpPropre)) {
     return {
       id: 'compte-principal',
       nom: 'Admin',
+      nomUtilisateur: 'admin',
       role: 'super_admin',
     };
   }
 
-  const trouve = utilisateurs.find((u) => u.motDePasse === mdpPropre);
+  const trouve = utilisateurs.find((u) => {
+    const pseudoCompte = (u.nomUtilisateur ?? u.nom).trim().replace(/^@/, '').toLowerCase();
+    return pseudoCompte === pseudoPropre && u.motDePasse === mdpPropre;
+  });
   if (!trouve) return null;
 
+  const identifiant = trouve.nomUtilisateur?.trim() || trouve.nom;
   return {
     id: trouve.id,
-    nom: trouve.nom,
+    nom: identifiant,
+    nomUtilisateur: identifiant,
     role: trouve.role,
   };
 }

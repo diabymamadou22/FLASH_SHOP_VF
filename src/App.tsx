@@ -4,6 +4,7 @@ import MobileBottomNav from './components/MobileBottomNav';
 import Sidebar from './components/Sidebar';
 import CategoriesPage from './pages/CategoriesPage';
 import ConnexionPage from './pages/ConnexionPage';
+import CreditsPage from './pages/CreditsPage';
 import DashboardPage from './pages/DashboardPage';
 import DepensesPage from './pages/DepensesPage';
 import HistoriqueVentesPage from './pages/HistoriqueVentesPage';
@@ -13,7 +14,7 @@ import RapportsPage from './pages/RapportsPage';
 import StocksPage from './pages/StocksPage';
 import VentesCaissePage from './pages/VentesCaissePage';
 import {
-  authentifierParMotDePasse,
+  authentifierUtilisateur,
   chargerSession,
   getPageDefautRole,
   peutAccederPage,
@@ -22,17 +23,17 @@ import {
 import {
   chargerBase,
   demanderStockagePersistant,
-  importerBaseJson,
-  reinitialiserBase,
   sauvegarderBase,
   verifierRestaurationLocale,
 } from './services/database';
+import { prechargerLogoPdf } from './services/logoPdf';
 import {
   BaseDonnees,
   Categorie,
   Depense,
   MouvementStock,
   PageId,
+  PaiementCredit,
   ParametresBoutique,
   Produit,
   SessionUtilisateur,
@@ -71,6 +72,11 @@ export default function App() {
     sauvegarderSession(session);
   }, [session]);
 
+  // Précharge le logo (par défaut ou personnalisé) pour l'impression et les PDF
+  useEffect(() => {
+    void prechargerLogoPdf(donnees.parametres.logoDataUrl);
+  }, [donnees.parametres.logoDataUrl]);
+
   // Liste des produits ayant atteint ou dépassé leur seuil minimal
   const produitsEnAlerte = useMemo(
     () => donnees.produits.filter((p) => getStatutStock(p.stock, p.seuil) !== 'en_stock'),
@@ -78,8 +84,12 @@ export default function App() {
   );
 
   // --- Authentification ---
-  const gererConnexion = (motDePasse: string): boolean => {
-    const nouvelleSession = authentifierParMotDePasse(motDePasse, donnees.utilisateurs);
+  const gererConnexion = (nomUtilisateur: string, motDePasse: string): boolean => {
+    const nouvelleSession = authentifierUtilisateur(
+      nomUtilisateur,
+      motDePasse,
+      donnees.utilisateurs
+    );
     if (!nouvelleSession) return false;
     setSession(nouvelleSession);
     setPageActive(getPageDefautRole(nouvelleSession.role));
@@ -178,6 +188,22 @@ export default function App() {
     }));
   };
 
+  const enregistrerPaiementCredit = (venteId: string, paiement: PaiementCredit) => {
+    setDonnees((prev) => ({
+      ...prev,
+      ventes: prev.ventes.map((v) => {
+        if (v.id !== venteId) return v;
+        const payeActuel = v.montantPaye ?? 0;
+        const nouveauPaye = Math.min(v.total, payeActuel + paiement.montant);
+        return {
+          ...v,
+          montantPaye: nouveauPaye,
+          paiementsCredit: [...(v.paiementsCredit ?? []), paiement],
+        };
+      }),
+    }));
+  };
+
   // --- Mouvement de stock manuel (entrée ou sortie) ---
   const enregistrerMouvementStock = (mouvement: MouvementStock) => {
     setDonnees((prev) => {
@@ -228,6 +254,16 @@ export default function App() {
         u.id === utilisateurModifie.id ? utilisateurModifie : u
       ),
     }));
+    setSession((prev) =>
+      prev && prev.id === utilisateurModifie.id
+        ? {
+            id: utilisateurModifie.id,
+            nom: utilisateurModifie.nom,
+            nomUtilisateur: utilisateurModifie.nomUtilisateur,
+            role: utilisateurModifie.role,
+          }
+        : prev
+    );
   };
 
   const supprimerUtilisateur = (id: string) => {
@@ -244,16 +280,6 @@ export default function App() {
     }));
   };
 
-  const handleImporter = (contenuJson: string) => {
-    const nouvelleBase = importerBaseJson(contenuJson);
-    setDonnees(nouvelleBase);
-  };
-
-  const handleReinitialiser = () => {
-    const basePropre = reinitialiserBase();
-    setDonnees(basePropre);
-  };
-
   // Écran de connexion si aucune session n'est active
   if (!session) {
     return <ConnexionPage parametres={donnees.parametres} onConnexion={gererConnexion} />;
@@ -264,12 +290,11 @@ export default function App() {
     : getPageDefautRole(session.role);
 
   return (
-    <div className="flex min-h-screen bg-slate-50 text-slate-900">
+    <div className="flex min-h-[100dvh] w-full overflow-x-hidden bg-slate-50 text-slate-900">
       <Sidebar
         pageActive={pageCourante}
         role={session.role}
         onChangerPage={changerPage}
-        onDeconnexion={gererDeconnexion}
         parametres={donnees.parametres}
         ouvertMobile={menuMobileOuvert}
         onFermerMobile={() => setMenuMobileOuvert(false)}
@@ -285,7 +310,7 @@ export default function App() {
           onDeconnexion={gererDeconnexion}
         />
 
-        <main className="flex-1 p-3 pb-24 sm:p-6 lg:pb-6">
+        <main className="flex-1 p-3 pb-[calc(5.25rem+env(safe-area-inset-bottom,0px))] sm:p-6 lg:pb-6">
           {pageCourante === 'dashboard' && (
             <DashboardPage
               donnees={donnees}
@@ -322,6 +347,16 @@ export default function App() {
               parametres={donnees.parametres}
               nombreVentesExistantes={donnees.ventes.length}
               onValiderVente={validerVente}
+            />
+          )}
+
+          {pageCourante === 'credits' && (
+            <CreditsPage
+              ventes={donnees.ventes}
+              parametres={donnees.parametres}
+              role={session.role}
+              onEnregistrerPaiementCredit={enregistrerPaiementCredit}
+              onSupprimerVente={supprimerVente}
             />
           )}
 
@@ -368,8 +403,6 @@ export default function App() {
               onAjouterUtilisateur={ajouterUtilisateur}
               onModifierUtilisateur={modifierUtilisateur}
               onSupprimerUtilisateur={supprimerUtilisateur}
-              onImporterBase={handleImporter}
-              onReinitialiserBase={handleReinitialiser}
             />
           )}
         </main>

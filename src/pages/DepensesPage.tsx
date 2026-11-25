@@ -43,12 +43,17 @@ export default function DepensesPage({
   };
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-      {/* Formulaire de saisie d'une dépense */}
-      <section className="rounded-xl border border-slate-200 bg-white p-5 lg:col-span-1">
-        <h2 className="mb-4 text-base font-bold text-slate-900">Enregistrer une dépense</h2>
-        <form onSubmit={soumettre} className="space-y-4">
-          <div>
+    <div className="space-y-4">
+      {/* Formulaire compact de saisie d'une dépense */}
+      <section className="rounded-xl border border-slate-200 bg-white p-4">
+        <h2 className="mb-3 text-sm font-bold text-slate-900 sm:text-base">
+          Enregistrer une dépense
+        </h2>
+        <form
+          onSubmit={soumettre}
+          className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-12"
+        >
+          <div className="lg:col-span-4">
             <label className="mb-1 block text-xs font-semibold text-slate-700">Libellé *</label>
             <input
               type="text"
@@ -56,16 +61,16 @@ export default function DepensesPage({
               value={libelle}
               onChange={(e) => setLibelle(e.target.value)}
               placeholder="Ex: Facture d'électricité"
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none"
+              className="h-9 w-full rounded-lg border border-slate-200 px-2.5 text-sm focus:border-blue-600 focus:outline-none"
             />
           </div>
 
-          <div>
+          <div className="lg:col-span-3">
             <label className="mb-1 block text-xs font-semibold text-slate-700">Catégorie</label>
             <select
               value={categorie}
               onChange={(e) => setCategorie(e.target.value as Depense['categorie'])}
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-600 focus:outline-none"
+              className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-sm focus:border-blue-600 focus:outline-none"
             >
               <option value="Loyer">Loyer</option>
               <option value="Electricite">Électricité / Eau</option>
@@ -75,7 +80,7 @@ export default function DepensesPage({
             </select>
           </div>
 
-          <div>
+          <div className="lg:col-span-3">
             <label className="mb-1 block text-xs font-semibold text-slate-700">
               Montant ({devise}) *
             </label>
@@ -86,24 +91,26 @@ export default function DepensesPage({
               value={montant}
               onChange={(e) => setMontant(e.target.value)}
               placeholder="Ex: 25000"
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm tabular-nums focus:border-blue-600 focus:outline-none"
+              className="h-9 w-full rounded-lg border border-slate-200 px-2.5 text-sm tabular-nums focus:border-blue-600 focus:outline-none"
             />
           </div>
 
-          <button
-            type="submit"
-            className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-blue-700 py-2.5 text-sm font-semibold text-white hover:bg-blue-800"
-          >
-            <Plus className="h-4 w-4" />
-            Ajouter la dépense
-          </button>
+          <div className="flex items-end sm:col-span-2 lg:col-span-2">
+            <button
+              type="submit"
+              className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-blue-700 px-3 text-sm font-semibold text-white hover:bg-blue-800"
+            >
+              <Plus className="h-4 w-4 shrink-0" />
+              Ajouter
+            </button>
+          </div>
         </form>
       </section>
 
       {/* Tableau des dépenses */}
-      <section className="overflow-hidden rounded-xl border border-slate-200 bg-white lg:col-span-2">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-4 py-3.5 sm:px-5 sm:py-4">
-          <h2 className="text-base font-bold text-slate-900">
+      <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-4 py-2.5">
+          <h2 className="text-sm font-bold text-slate-900 sm:text-base">
             Dépenses enregistrées ({depenses.length})
           </h2>
           <div className="font-mono text-sm font-bold text-slate-900 tabular-nums">
@@ -114,10 +121,10 @@ export default function DepensesPage({
         {/* Vue cartes mobile (< md) */}
         <div className="divide-y divide-slate-100 md:hidden">
           {depenses.length === 0 ? (
-            <p className="px-4 py-10 text-center text-sm text-slate-500">Aucune dépense saisie.</p>
+            <p className="px-4 py-6 text-center text-sm text-slate-500">Aucune dépense saisie.</p>
           ) : (
             depenses.map((d) => (
-              <div key={d.id} className="flex items-center justify-between gap-3 p-4">
+              <div key={d.id} className="flex items-center justify-between gap-3 p-3">
                 <div className="min-w-0">
                   <div className="text-sm font-semibold text-slate-900">{d.libelle}</div>
                   <div className="text-xs text-slate-500">
@@ -131,10 +138,10 @@ export default function DepensesPage({
                   <button
                     type="button"
                     onClick={() => onSupprimerDepense(d.id)}
-                    className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-lg bg-red-600 text-white hover:bg-red-700"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-600 text-white hover:bg-red-700"
                     aria-label={`Supprimer ${d.libelle}`}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>
               </div>
@@ -146,32 +153,32 @@ export default function DepensesPage({
           <table className="w-full border-collapse text-left text-sm">
             <thead>
               <tr className="bg-[#0D357A] text-xs font-semibold text-white">
-                <th className="px-4 py-3">Date</th>
-                <th className="px-4 py-3">Libellé</th>
-                <th className="px-4 py-3">Catégorie</th>
-                <th className="px-4 py-3 text-right">Montant</th>
-                <th className="px-4 py-3 text-center">Action</th>
+                <th className="px-3 py-2">Date</th>
+                <th className="px-3 py-2">Libellé</th>
+                <th className="px-3 py-2">Catégorie</th>
+                <th className="px-3 py-2 text-right">Montant</th>
+                <th className="px-3 py-2 text-center">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {depenses.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-sm text-slate-500">
+                  <td colSpan={5} className="px-3 py-6 text-center text-sm text-slate-500">
                     Aucune dépense saisie.
                   </td>
                 </tr>
               ) : (
                 depenses.map((d) => (
                   <tr key={d.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 text-xs text-slate-600 whitespace-nowrap">
+                    <td className="whitespace-nowrap px-3 py-2 text-xs text-slate-600">
                       {formatDateCourte(d.date)}
                     </td>
-                    <td className="px-4 py-3 font-semibold text-slate-900">{d.libelle}</td>
-                    <td className="px-4 py-3 text-xs text-slate-700">{d.categorie}</td>
-                    <td className="px-4 py-3 text-right font-mono font-bold text-slate-900 tabular-nums whitespace-nowrap">
+                    <td className="px-3 py-2 font-semibold text-slate-900">{d.libelle}</td>
+                    <td className="px-3 py-2 text-xs text-slate-700">{d.categorie}</td>
+                    <td className="whitespace-nowrap px-3 py-2 text-right font-mono font-bold text-slate-900 tabular-nums">
                       {formatPrix(d.montant, devise)}
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-3 py-2 text-center">
                       <button
                         type="button"
                         onClick={() => onSupprimerDepense(d.id)}

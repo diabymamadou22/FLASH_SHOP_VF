@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   ArrowRight,
   Boxes,
+  CreditCard,
   Package,
   ShoppingCart,
   TrendingUp,
@@ -21,13 +22,25 @@ export default function DashboardPage({ donnees, role, onAllerPage }: DashboardP
   const { produits, ventes, depenses, parametres } = donnees;
 
   const resume = useMemo(() => {
-    const chiffreAffaires = ventes.reduce((acc, v) => acc + v.total, 0);
+    const chiffreAffaires = ventes.reduce(
+      (acc, v) => acc + (v.estCredit ? Math.min(v.total, v.montantPaye ?? 0) : v.total),
+      0
+    );
+    const creditsEnCours = ventes.reduce(
+      (acc, v) => acc + (v.estCredit ? Math.max(0, v.total - (v.montantPaye ?? 0)) : 0),
+      0
+    );
+    const nbCreditsOuverts = ventes.filter(
+      (v) => v.estCredit && v.total - (v.montantPaye ?? 0) > 0
+    ).length;
     const valeurStock = produits.reduce((acc, p) => acc + p.prixAchat * p.stock, 0);
     const totalDepenses = depenses.reduce((acc, d) => acc + d.montant, 0);
     const alertes = produits.filter((p) => getStatutStock(p.stock, p.seuil) !== 'en_stock');
 
     return {
       chiffreAffaires,
+      creditsEnCours,
+      nbCreditsOuverts,
       valeurStock,
       totalDepenses,
       nombreVentes: ventes.length,
@@ -43,14 +56,17 @@ export default function DashboardPage({ donnees, role, onAllerPage }: DashboardP
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-xl border border-slate-200 bg-white p-5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500">Chiffre d&apos;affaires</span>
+            <span className="text-xs font-medium text-slate-500">CA encaissé</span>
             <TrendingUp className="h-4 w-4 text-blue-600" />
           </div>
           <div className="mt-2 text-2xl font-bold text-slate-900 tabular-nums">
             {formatPrix(resume.chiffreAffaires, parametres.devise)}
           </div>
           <div className="mt-1 text-xs text-slate-500 tabular-nums">
-            {resume.nombreVentes} vente(s) enregistrée(s)
+            {resume.nombreVentes} vente(s) · Crédits dus :{' '}
+            <span className="font-semibold text-orange-600">
+              {formatPrix(resume.creditsEnCours, parametres.devise)}
+            </span>
           </div>
         </div>
 
@@ -112,6 +128,16 @@ export default function DashboardPage({ donnees, role, onAllerPage }: DashboardP
           >
             <Package className="h-4 w-4" />
             Gérer les produits
+          </button>
+        )}
+        {peutAccederPage(role, 'credits') && (
+          <button
+            type="button"
+            onClick={() => onAllerPage('credits')}
+            className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-2.5 text-sm font-semibold text-orange-700 hover:bg-orange-100"
+          >
+            <CreditCard className="h-4 w-4" />
+            Gérer les crédits ({resume.nbCreditsOuverts})
           </button>
         )}
         {peutAccederPage(role, 'stocks') && (

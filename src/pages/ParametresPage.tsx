@@ -1,21 +1,30 @@
-import { ChangeEvent, FormEvent, useRef, useState } from 'react';
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react';
 import {
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   Download,
   Eye,
   EyeOff,
+  FileSpreadsheet,
+  FileText,
+  ImagePlus,
+  Palette,
   Pencil,
   Plus,
   RotateCcw,
   Save,
   Trash2,
-  Upload,
   UserPlus,
+  Users,
   X,
 } from 'lucide-react';
+import { DESIGNS_FACTURE_A4 } from '../components/FactureImprimable';
 import { LIBELLES_ROLE, verifierMotDePasseSuperAdmin } from '../services/auth';
+import { exporterDonneesExcel, exporterDonneesWord } from '../services/exportDonnees';
 import {
   BaseDonnees,
+  DesignFactureA4,
   ParametresBoutique,
   RoleAssignable,
   Utilisateur,
@@ -29,8 +38,6 @@ interface ParametresPageProps {
   onAjouterUtilisateur: (utilisateur: Utilisateur) => void;
   onModifierUtilisateur: (utilisateur: Utilisateur) => void;
   onSupprimerUtilisateur: (id: string) => void;
-  onImporterBase: (contenuJson: string) => void;
-  onReinitialiserBase: () => void;
 }
 
 export default function ParametresPage({
@@ -40,28 +47,114 @@ export default function ParametresPage({
   onAjouterUtilisateur,
   onModifierUtilisateur,
   onSupprimerUtilisateur,
-  onImporterBase,
-  onReinitialiserBase,
 }: ParametresPageProps) {
   const [form, setForm] = useState<ParametresBoutique>(donnees.parametres);
   const [messageSucces, setMessageSucces] = useState('');
   const [messageErreur, setMessageErreur] = useState('');
-  const [confirmationReset, setConfirmationReset] = useState(false);
-  const inputImportRef = useRef<HTMLInputElement>(null);
+  const inputLogoRef = useRef<HTMLInputElement>(null);
 
   // États pour la gestion des utilisateurs et rôles
-  const [nomUser, setNomUser] = useState('');
+  const [nomUtilisateurUser, setNomUtilisateurUser] = useState('');
   const [motDePasseUser, setMotDePasseUser] = useState('');
   const [afficherMdpForm, setAfficherMdpForm] = useState(false);
   const [mdpVisibles, setMdpVisibles] = useState<Record<string, boolean>>({});
   const [roleUser, setRoleUser] = useState<RoleAssignable>('comptable');
   const [userEnEdition, setUserEnEdition] = useState<Utilisateur | null>(null);
   const [erreurUser, setErreurUser] = useState('');
+  const [afficherListeUsers, setAfficherListeUsers] = useState(false);
+  const [exportEnCours, setExportEnCours] = useState<'excel' | 'word' | null>(null);
+
+  useEffect(() => {
+    setForm(donnees.parametres);
+  }, [donnees.parametres]);
+
+  const lancerExportExcel = () => {
+    try {
+      setExportEnCours('excel');
+      exporterDonneesExcel(donnees);
+      afficherSucces('Exportation Excel (.xlsx) générée avec toutes les données.');
+    } catch {
+      setMessageErreur("Impossible de générer l'export Excel.");
+    } finally {
+      setExportEnCours(null);
+    }
+  };
+
+  const lancerExportWord = async () => {
+    try {
+      setExportEnCours('word');
+      await exporterDonneesWord(donnees);
+      afficherSucces('Rapport Word (.docx) généré avec toutes les données.');
+    } catch {
+      setMessageErreur("Impossible de générer le document Word.");
+    } finally {
+      setExportEnCours(null);
+    }
+  };
 
   const afficherSucces = (msg: string) => {
     setMessageErreur('');
     setMessageSucces(msg);
     setTimeout(() => setMessageSucces(''), 3500);
+  };
+
+  /**
+   * Redimensionne l'image importée (max 256px) pour garantir une sauvegarde locale légère.
+   */
+  const convertirLogoEnDataUrl = (fichier: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const lecteur = new FileReader();
+      lecteur.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const tailleMax = 256;
+          const ratio = Math.min(tailleMax / img.width, tailleMax / img.height, 1);
+          const largeur = Math.max(1, Math.round(img.width * ratio));
+          const hauteur = Math.max(1, Math.round(img.height * ratio));
+          const canvas = document.createElement('canvas');
+          canvas.width = largeur;
+          canvas.height = hauteur;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Canvas indisponible'));
+            return;
+          }
+          ctx.drawImage(img, 0, 0, largeur, hauteur);
+          resolve(canvas.toDataURL('image/png'));
+        };
+        img.onerror = () => reject(new Error('Image invalide'));
+        img.src = String(lecteur.result);
+      };
+      lecteur.onerror = () => reject(new Error('Lecture impossible'));
+      lecteur.readAsDataURL(fichier);
+    });
+
+  const gererImportLogo = async (e: ChangeEvent<HTMLInputElement>) => {
+    const fichier = e.target.files?.[0];
+    if (!fichier) return;
+    if (!fichier.type.startsWith('image/')) {
+      setMessageErreur('Veuillez sélectionner un fichier image valide (PNG, JPG, WebP...).');
+      e.target.value = '';
+      return;
+    }
+    try {
+      const logoDataUrl = await convertirLogoEnDataUrl(fichier);
+      const misAJour = { ...form, logoDataUrl };
+      setForm(misAJour);
+      onSauvegarderParametres(misAJour);
+      afficherSucces('Logo de la boutique importé et enregistré.');
+    } catch {
+      setMessageErreur("Impossible de charger ce fichier image pour le logo.");
+    } finally {
+      e.target.value = '';
+    }
+  };
+
+  const reinitialiserLogo = () => {
+    const misAJour = { ...form, logoDataUrl: undefined };
+    setForm(misAJour);
+    onSauvegarderParametres(misAJour);
+    afficherSucces('Logo par défaut restauré.');
   };
 
   const soumettreBoutique = (e: FormEvent) => {
@@ -72,7 +165,7 @@ export default function ParametresPage({
 
   const reinitialiserFormUser = () => {
     setUserEnEdition(null);
-    setNomUser('');
+    setNomUtilisateurUser('');
     setMotDePasseUser('');
     setAfficherMdpForm(false);
     setRoleUser('comptable');
@@ -85,7 +178,7 @@ export default function ParametresPage({
 
   const chargerEditionUser = (u: Utilisateur) => {
     setUserEnEdition(u);
-    setNomUser(u.nom);
+    setNomUtilisateurUser(u.nomUtilisateur ?? u.nom);
     setMotDePasseUser(u.motDePasse);
     setRoleUser(u.role);
     setErreurUser('');
@@ -93,10 +186,26 @@ export default function ParametresPage({
 
   const soumettreUtilisateur = (e: FormEvent) => {
     e.preventDefault();
+    const nomUtilisateurPropre = nomUtilisateurUser.trim().replace(/^@/, '');
     const mdpPropre = motDePasseUser.trim();
 
-    if (!nomUser.trim() || !mdpPropre) {
-      setErreurUser('Le nom et le mot de passe sont obligatoires.');
+    if (!nomUtilisateurPropre || !mdpPropre) {
+      setErreurUser("Le nom d'utilisateur et le mot de passe sont obligatoires.");
+      return;
+    }
+
+    if (nomUtilisateurPropre.toLowerCase() === 'admin') {
+      setErreurUser("Ce nom d'utilisateur est réservé.");
+      return;
+    }
+
+    const doublonPseudo = donnees.utilisateurs.some(
+      (u) =>
+        (u.nomUtilisateur ?? u.nom).trim().replace(/^@/, '').toLowerCase() ===
+          nomUtilisateurPropre.toLowerCase() && u.id !== userEnEdition?.id
+    );
+    if (doublonPseudo) {
+      setErreurUser("Ce nom d'utilisateur est déjà attribué à un autre utilisateur.");
       return;
     }
 
@@ -105,32 +214,26 @@ export default function ParametresPage({
       return;
     }
 
-    const doublon = donnees.utilisateurs.some(
-      (u) => u.motDePasse === mdpPropre && u.id !== userEnEdition?.id
-    );
-    if (doublon) {
-      setErreurUser('Ce mot de passe est déjà utilisé par un autre utilisateur.');
-      return;
-    }
-
     if (userEnEdition) {
       onModifierUtilisateur({
         ...userEnEdition,
-        nom: nomUser.trim(),
+        nom: nomUtilisateurPropre,
+        nomUtilisateur: nomUtilisateurPropre,
         motDePasse: mdpPropre,
         role: roleUser,
       });
-      afficherSucces(`Compte "${nomUser.trim()}" mis à jour.`);
+      afficherSucces(`Compte "@${nomUtilisateurPropre}" mis à jour.`);
     } else {
       onAjouterUtilisateur({
         id: genererId('usr'),
-        nom: nomUser.trim(),
+        nom: nomUtilisateurPropre,
+        nomUtilisateur: nomUtilisateurPropre,
         motDePasse: mdpPropre,
         role: roleUser,
         dateCreation: new Date().toISOString(),
       });
       afficherSucces(
-        `Utilisateur "${nomUser.trim()}" créé avec le rôle ${LIBELLES_ROLE[roleUser]}.`
+        `Utilisateur "@${nomUtilisateurPropre}" créé avec le rôle ${LIBELLES_ROLE[roleUser]}.`
       );
     }
 
@@ -146,448 +249,507 @@ export default function ParametresPage({
     onSupprimerUtilisateur(u.id);
   };
 
-  const exporterSauvegardeJson = () => {
-    const contenu = JSON.stringify(donnees, null, 2);
-    const blob = new Blob([contenu], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const lien = document.createElement('a');
-    lien.href = url;
-    lien.download = `flash-shop-sauvegarde-${new Date().toISOString().slice(0, 10)}.json`;
-    lien.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const gererImportFichier = async (e: ChangeEvent<HTMLInputElement>) => {
-    const fichier = e.target.files?.[0];
-    if (!fichier) return;
-    try {
-      const texte = await fichier.text();
-      onImporterBase(texte);
-      afficherSucces('Sauvegarde importée et enregistrée sur cet appareil.');
-    } catch {
-      setMessageErreur('Le fichier sélectionné ne correspond pas à une sauvegarde FLASH-SHOP.');
-    } finally {
-      e.target.value = '';
-    }
-  };
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {messageSucces && (
-        <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-700">
+        <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3.5 py-2 text-xs font-semibold text-emerald-700">
           <CheckCircle2 className="h-4 w-4 shrink-0" />
           {messageSucces}
         </div>
       )}
 
       {messageErreur && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-semibold text-red-700">
+        <div className="rounded-lg border border-red-200 bg-red-50 px-3.5 py-2 text-xs font-semibold text-red-700">
           {messageErreur}
         </div>
       )}
 
       {/* Gestion des utilisateurs et rôles */}
-      <section className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
-        <div className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3">
-          <UserPlus className="h-5 w-5 text-[#0A3072]" />
-          <h2 className="text-base font-bold text-slate-900">
-            Gestion des utilisateurs et rôles
-          </h2>
+      <section className="rounded-xl border border-slate-200 bg-white p-4">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+          <div className="flex items-center gap-2">
+            <UserPlus className="h-4 w-4 text-[#0A3072]" />
+            <h2 className="text-sm font-bold text-slate-900 sm:text-base">
+              Gestion des utilisateurs et rôles
+            </h2>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setAfficherListeUsers((prev) => !prev)}
+            aria-expanded={afficherListeUsers}
+            className={`inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-colors ${
+              afficherListeUsers
+                ? 'bg-[#0A3072] text-white hover:bg-blue-900'
+                : 'border border-slate-200 bg-slate-50 text-slate-800 hover:bg-slate-100'
+            }`}
+          >
+            <Users className="h-3.5 w-3.5" />
+            <span>Liste des utilisateurs ({donnees.utilisateurs.length})</span>
+            {afficherListeUsers ? (
+              <ChevronUp className="h-3.5 w-3.5" />
+            ) : (
+              <ChevronDown className="h-3.5 w-3.5" />
+            )}
+          </button>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <div className="space-y-3">
           {/* Formulaire création / modification utilisateur */}
-          <form onSubmit={soumettreUtilisateur} className="space-y-3 lg:col-span-5">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-800">
-                {userEnEdition ? 'Modifier l’utilisateur' : 'Créer un utilisateur'}
-              </h3>
-              {userEnEdition && (
+          <form onSubmit={soumettreUtilisateur} className="space-y-2.5">
+            {userEnEdition && (
+              <div className="flex items-center justify-between rounded-lg bg-blue-50 px-3 py-1.5">
+                <span className="text-xs font-semibold text-blue-800">
+                  Modification de : @{userEnEdition.nomUtilisateur || userEnEdition.nom}
+                </span>
                 <button
                   type="button"
                   onClick={reinitialiserFormUser}
-                  className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                  className="rounded-md p-1 text-blue-600 hover:bg-blue-100"
+                  aria-label="Annuler la modification"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-3.5 w-3.5" />
                 </button>
-              )}
-            </div>
+              </div>
+            )}
 
             {erreurUser && (
-              <div className="rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
+              <div className="rounded-lg bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-700">
                 {erreurUser}
               </div>
             )}
 
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-slate-700">
-                Nom complet *
-              </label>
-              <input
-                type="text"
-                required
-                value={nomUser}
-                onChange={(e) => setNomUser(e.target.value)}
-                placeholder="Ex: Ibrahim Diallo"
-                className="min-h-[42px] w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-slate-700">Rôle *</label>
-              <select
-                value={roleUser}
-                onChange={(e) => setRoleUser(e.target.value as RoleAssignable)}
-                className="min-h-[42px] w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-600 focus:outline-none"
-              >
-                <option value="admin">Administrateur</option>
-                <option value="comptable">Comptable</option>
-                <option value="caissier">Caissier</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-slate-700">
-                Mot de passe de connexion *
-              </label>
-              <div className="relative">
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-slate-700">
+                  Nom d&apos;utilisateur *
+                </label>
                 <input
-                  type={afficherMdpForm ? 'text' : 'password'}
+                  type="text"
                   required
-                  value={motDePasseUser}
-                  onChange={(e) => setMotDePasseUser(e.target.value)}
-                  placeholder="Définir un mot de passe unique"
-                  className="min-h-[42px] w-full rounded-lg border border-slate-200 py-2 pl-3 pr-10 text-sm focus:border-blue-600 focus:outline-none"
+                  value={nomUtilisateurUser}
+                  onChange={(e) => setNomUtilisateurUser(e.target.value)}
+                  placeholder="Ex: ibrahim.compta"
+                  className="h-9 w-full rounded-lg border border-slate-200 px-2.5 text-sm focus:border-blue-600 focus:outline-none"
                 />
-                <button
-                  type="button"
-                  onClick={() => setAfficherMdpForm((v) => !v)}
-                  className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-                  aria-label={afficherMdpForm ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-                  title={afficherMdpForm ? 'Masquer' : 'Afficher'}
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-slate-700">Rôle *</label>
+                <select
+                  value={roleUser}
+                  onChange={(e) => setRoleUser(e.target.value as RoleAssignable)}
+                  className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-sm focus:border-blue-600 focus:outline-none"
                 >
-                  {afficherMdpForm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  <option value="admin">Administrateur</option>
+                  <option value="comptable">Comptable</option>
+                  <option value="caissier">Caissier</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-slate-700">
+                  Mot de passe *
+                </label>
+                <div className="relative">
+                  <input
+                    type={afficherMdpForm ? 'text' : 'password'}
+                    required
+                    value={motDePasseUser}
+                    onChange={(e) => setMotDePasseUser(e.target.value)}
+                    placeholder="Mot de passe unique"
+                    className="h-9 w-full rounded-lg border border-slate-200 pl-2.5 pr-8 text-sm focus:border-blue-600 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setAfficherMdpForm((v) => !v)}
+                    className="absolute right-1 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                    aria-label={afficherMdpForm ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                    title={afficherMdpForm ? 'Masquer' : 'Afficher'}
+                  >
+                    {afficherMdpForm ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-end sm:col-span-2 lg:col-span-1">
+                <button
+                  type="submit"
+                  className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-blue-700 px-3 text-sm font-semibold text-white hover:bg-blue-800"
+                >
+                  <Plus className="h-4 w-4 shrink-0" />
+                  <span className="truncate">
+                    {userEnEdition ? 'Mettre à jour' : 'Créer'}
+                  </span>
                 </button>
               </div>
             </div>
 
-            <div className="text-[11px] leading-relaxed text-slate-500">
-              <strong>Administrateur :</strong> accès complet · <strong>Comptable :</strong>{' '}
-              tableau de bord, historique, dépenses, rapports · <strong>Caissier :</strong> caisse,
-              catalogue en lecture, historique.
-            </div>
-
-            <button
-              type="submit"
-              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800"
-            >
-              <Plus className="h-4 w-4" />
-              {userEnEdition ? 'Mettre à jour le compte' : 'Créer l’utilisateur'}
-            </button>
+            <p className="text-[11px] leading-snug text-slate-500">
+              <strong>Admin :</strong> accès complet · <strong>Comptable :</strong> bord, historique,
+              dépenses, rapports · <strong>Caissier :</strong> caisse, lecture produits.
+            </p>
           </form>
 
-          {/* Liste des utilisateurs créés */}
-          <div className="lg:col-span-7">
-            <h3 className="mb-3 text-sm font-bold text-slate-800">
-              Utilisateurs enregistrés ({donnees.utilisateurs.length})
-            </h3>
-
-            {donnees.utilisateurs.length === 0 ? (
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-6 text-center text-xs text-slate-500">
-                Aucun utilisateur secondaire créé pour le moment. Utilisez le formulaire à gauche
-                pour ajouter un comptable, un caissier ou un administrateur.
-              </div>
-            ) : (
-              <>
-                {/* Vue mobile */}
-                <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 md:hidden">
-                  {donnees.utilisateurs.map((u) => {
-                    const visible = !!mdpVisibles[u.id];
-                    return (
-                      <div key={u.id} className="flex items-center justify-between gap-2 p-3.5">
-                        <div className="min-w-0">
-                          <div className="text-sm font-semibold text-slate-900">{u.nom}</div>
-                          <div className="text-xs font-medium text-blue-700">
-                            {LIBELLES_ROLE[u.role]}
+          {/* Liste des utilisateurs affichée dans la même interface au clic sur le bouton */}
+          {afficherListeUsers && (
+            <div className="border-t border-slate-100 pt-3">
+              {donnees.utilisateurs.length === 0 ? (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center text-xs text-slate-500">
+                  Aucun utilisateur secondaire créé pour le moment. Utilisez le formulaire ci-dessus
+                  pour ajouter un comptable, un caissier ou un administrateur.
+                </div>
+              ) : (
+                <>
+                  {/* Vue mobile */}
+                  <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 md:hidden">
+                    {donnees.utilisateurs.map((u) => {
+                      const visible = !!mdpVisibles[u.id];
+                      return (
+                        <div key={u.id} className="flex items-center justify-between gap-2 p-3">
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="font-mono text-sm font-semibold text-slate-900">
+                                @{u.nomUtilisateur || u.nom}
+                              </span>
+                            </div>
+                            <div className="mt-0.5 flex items-center gap-2 text-xs">
+                              <span className="font-medium text-blue-700">
+                                {LIBELLES_ROLE[u.role]}
+                              </span>
+                              <span className="text-slate-300">·</span>
+                              <span className="font-mono text-slate-600">
+                                {visible ? u.motDePasse : '••••••'}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => toggleMdpVisible(u.id)}
+                                className="rounded p-0.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                                aria-label={
+                                  visible
+                                    ? `Masquer le mot de passe de ${u.nom}`
+                                    : `Afficher le mot de passe de ${u.nom}`
+                                }
+                              >
+                                {visible ? (
+                                  <EyeOff className="h-3.5 w-3.5" />
+                                ) : (
+                                  <Eye className="h-3.5 w-3.5" />
+                                )}
+                              </button>
+                            </div>
                           </div>
-                          <div className="mt-1 flex items-center gap-1.5 font-mono text-xs text-slate-600">
-                            <span>{visible ? u.motDePasse : '••••••'}</span>
+                          <div className="flex shrink-0 items-center gap-1.5">
                             <button
                               type="button"
-                              onClick={() => toggleMdpVisible(u.id)}
-                              className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-                              aria-label={
-                                visible
-                                  ? `Masquer le mot de passe de ${u.nom}`
-                                  : `Afficher le mot de passe de ${u.nom}`
-                              }
+                              onClick={() => chargerEditionUser(u)}
+                              className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+                              aria-label={`Modifier ${u.nom}`}
                             >
-                              {visible ? (
-                                <EyeOff className="h-3.5 w-3.5" />
-                              ) : (
-                                <Eye className="h-3.5 w-3.5" />
-                              )}
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => tenterSuppressionUser(u)}
+                              className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-600 text-white hover:bg-red-700"
+                              aria-label={`Supprimer ${u.nom}`}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
                             </button>
                           </div>
                         </div>
-                        <div className="flex shrink-0 items-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => chargerEditionUser(u)}
-                            className="flex min-h-[38px] min-w-[38px] items-center justify-center rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
-                            aria-label={`Modifier ${u.nom}`}
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => tenterSuppressionUser(u)}
-                            className="flex min-h-[38px] min-w-[38px] items-center justify-center rounded-lg bg-red-600 text-white hover:bg-red-700"
-                            aria-label={`Supprimer ${u.nom}`}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
 
-                {/* Vue desktop */}
-                <div className="hidden overflow-x-auto rounded-xl border border-slate-200 md:block">
-                  <table className="w-full border-collapse text-left text-sm">
-                    <thead>
-                      <tr className="bg-[#0D357A] text-xs font-semibold text-white">
-                        <th className="px-4 py-3">Nom</th>
-                        <th className="px-4 py-3">Rôle</th>
-                        <th className="px-4 py-3">Mot de passe</th>
-                        <th className="px-4 py-3 text-center">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {donnees.utilisateurs.map((u) => {
-                        const visible = !!mdpVisibles[u.id];
-                        return (
-                          <tr key={u.id} className="hover:bg-slate-50">
-                            <td className="px-4 py-3 font-semibold text-slate-900">{u.nom}</td>
-                            <td className="px-4 py-3 text-xs font-semibold text-blue-700">
-                              {LIBELLES_ROLE[u.role]}
-                            </td>
-                            <td className="px-4 py-3 font-mono text-xs text-slate-700">
-                              <div className="flex items-center gap-2">
-                                <span>{visible ? u.motDePasse : '••••••'}</span>
-                                <button
-                                  type="button"
-                                  onClick={() => toggleMdpVisible(u.id)}
-                                  className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-                                  aria-label={
-                                    visible
-                                      ? `Masquer le mot de passe de ${u.nom}`
-                                      : `Afficher le mot de passe de ${u.nom}`
-                                  }
-                                  title={visible ? 'Masquer' : 'Afficher'}
-                                >
-                                  {visible ? (
-                                    <EyeOff className="h-3.5 w-3.5" />
-                                  ) : (
-                                    <Eye className="h-3.5 w-3.5" />
-                                  )}
-                                </button>
-                              </div>
-                            </td>
-                            <td className="px-4 py-3">
-                            <div className="flex items-center justify-center gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => chargerEditionUser(u)}
-                                className="rounded-lg bg-indigo-600 p-1.5 text-white hover:bg-indigo-700"
-                                title="Modifier"
-                                aria-label={`Modifier ${u.nom}`}
-                              >
-                                <Pencil className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => tenterSuppressionUser(u)}
-                                className="rounded-lg bg-red-600 p-1.5 text-white hover:bg-red-700"
-                                title="Supprimer"
-                                aria-label={`Supprimer ${u.nom}`}
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            )}
-          </div>
+                  {/* Vue desktop sans défilement horizontal */}
+                  <div className="hidden overflow-hidden rounded-xl border border-slate-200 md:block">
+                    <table className="w-full border-collapse text-left text-xs sm:text-sm">
+                      <thead>
+                        <tr className="bg-[#0D357A] text-xs font-semibold text-white">
+                          <th className="px-3 py-2">Utilisateur</th>
+                          <th className="px-3 py-2">Rôle</th>
+                          <th className="px-3 py-2">Mot de passe</th>
+                          <th className="px-3 py-2 text-center">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {donnees.utilisateurs.map((u) => {
+                          const visible = !!mdpVisibles[u.id];
+                          return (
+                            <tr key={u.id} className="hover:bg-slate-50">
+                              <td className="px-3 py-2">
+                                <div className="font-mono text-xs font-semibold text-slate-900 sm:text-sm">
+                                  @{u.nomUtilisateur || u.nom}
+                                </div>
+                              </td>
+                              <td className="px-3 py-2">
+                                <span className="inline-block rounded-md bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                                  {LIBELLES_ROLE[u.role]}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2 font-mono text-xs text-slate-700">
+                                <div className="flex items-center gap-1.5">
+                                  <span>{visible ? u.motDePasse : '••••••'}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleMdpVisible(u.id)}
+                                    className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                                    aria-label={
+                                      visible
+                                        ? `Masquer le mot de passe de ${u.nom}`
+                                        : `Afficher le mot de passe de ${u.nom}`
+                                    }
+                                    title={visible ? 'Masquer' : 'Afficher'}
+                                  >
+                                    {visible ? (
+                                      <EyeOff className="h-3.5 w-3.5" />
+                                    ) : (
+                                      <Eye className="h-3.5 w-3.5" />
+                                    )}
+                                  </button>
+                                </div>
+                              </td>
+                              <td className="px-3 py-2">
+                                <div className="flex items-center justify-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => chargerEditionUser(u)}
+                                    className="rounded-lg bg-indigo-600 p-1.5 text-white hover:bg-indigo-700"
+                                    title="Modifier"
+                                    aria-label={`Modifier ${u.nom}`}
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => tenterSuppressionUser(u)}
+                                    className="rounded-lg bg-red-600 p-1.5 text-white hover:bg-red-700"
+                                    title="Supprimer"
+                                    aria-label={`Supprimer ${u.nom}`}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </section>
 
-      {/* Informations de la boutique + Base locale */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <section className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6 lg:col-span-2">
-          <h2 className="mb-4 text-base font-bold text-slate-900">Informations de la boutique</h2>
+      {/* Informations de la boutique */}
+      <section className="rounded-xl border border-slate-200 bg-white p-4">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-2.5">
+          <h2 className="text-sm font-bold text-slate-900 sm:text-base">
+            Informations de la boutique
+          </h2>
 
-          <form onSubmit={soumettreBoutique} className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-700">
-                  Nom de la boutique
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={form.nomBoutique}
-                  onChange={(e) => setForm({ ...form, nomBoutique: e.target.value })}
-                  className="min-h-[44px] w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-700">
-                  Activité / Sous-titre
-                </label>
-                <input
-                  type="text"
-                  value={form.sousTitre}
-                  onChange={(e) => setForm({ ...form, sousTitre: e.target.value })}
-                  className="min-h-[44px] w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-700">Téléphone</label>
-                <input
-                  type="text"
-                  value={form.telephone}
-                  onChange={(e) => setForm({ ...form, telephone: e.target.value })}
-                  className="min-h-[44px] w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-700">Adresse</label>
-                <input
-                  type="text"
-                  value={form.adresse}
-                  onChange={(e) => setForm({ ...form, adresse: e.target.value })}
-                  className="min-h-[44px] w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-700">
-                  Nom du gérant
-                </label>
-                <input
-                  type="text"
-                  value={form.nomGerant}
-                  onChange={(e) => setForm({ ...form, nomGerant: e.target.value })}
-                  className="min-h-[44px] w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-700">Devise</label>
-                <input
-                  type="text"
-                  value={form.devise}
-                  onChange={(e) => setForm({ ...form, devise: e.target.value })}
-                  className="min-h-[44px] w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-800 sm:w-auto"
-            >
-              <Save className="h-4 w-4" />
-              Enregistrer les modifications
-            </button>
-          </form>
-        </section>
-
-        <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
-          <h2 className="text-base font-bold text-slate-900">Base de données locale</h2>
-          <p className="text-xs leading-relaxed text-slate-600">
-            Toutes vos données sont enregistrées en double dans votre appareil (
-            <code className="font-mono">localStorage</code> +{' '}
-            <code className="font-mono">IndexedDB</code>) pour rester conservées même après
-            redémarrage.
-          </p>
-
-          <div className="space-y-3 pt-2">
-            <button
-              type="button"
-              onClick={exporterSauvegardeJson}
-              className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50"
-            >
-              <Download className="h-4 w-4" />
-              Exporter les données (JSON)
-            </button>
-
+          {/* Logo personnalisé compact */}
+          <div className="flex items-center gap-2.5">
+            <img
+              src={form.logoDataUrl || '/pwa-192x192.png'}
+              alt="Logo de la boutique"
+              className="h-9 w-9 shrink-0 rounded-lg border border-slate-200 bg-slate-50 object-contain p-0.5"
+            />
             <input
-              ref={inputImportRef}
+              ref={inputLogoRef}
               type="file"
-              accept="application/json,.json"
-              onChange={gererImportFichier}
+              accept="image/*"
+              onChange={gererImportLogo}
               className="hidden"
             />
             <button
               type="button"
-              onClick={() => inputImportRef.current?.click()}
-              className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+              onClick={() => inputLogoRef.current?.click()}
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#0A3072] px-2.5 text-xs font-semibold text-white hover:bg-blue-900"
             >
-              <Upload className="h-4 w-4" />
-              Importer une sauvegarde (JSON)
+              <ImagePlus className="h-3.5 w-3.5" />
+              Importer mon logo
             </button>
-
-            {!confirmationReset ? (
+            {form.logoDataUrl && (
               <button
                 type="button"
-                onClick={() => setConfirmationReset(true)}
-                className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-100"
+                onClick={reinitialiserLogo}
+                className="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                title="Rétablir le logo par défaut"
               >
-                <RotateCcw className="h-4 w-4" />
-                Réinitialiser les données de démo
+                <RotateCcw className="h-3.5 w-3.5" />
+                Défaut
               </button>
-            ) : (
-              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-800">
-                <p className="mb-2 font-semibold">
-                  Confirmer la remise à zéro avec les données initiales ?
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onReinitialiserBase();
-                      setConfirmationReset(false);
-                      afficherSucces('Base locale réinitialisée.');
-                    }}
-                    className="min-h-[40px] flex-1 rounded-md bg-red-600 px-3 py-1.5 font-semibold text-white hover:bg-red-700"
-                  >
-                    Confirmer
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setConfirmationReset(false)}
-                    className="min-h-[40px] flex-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 font-medium text-slate-700"
-                  >
-                    Annuler
-                  </button>
-                </div>
-              </div>
             )}
           </div>
-        </section>
-      </div>
+        </div>
+
+        <form onSubmit={soumettreBoutique} className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-slate-700">
+              Nom de la boutique
+            </label>
+            <input
+              type="text"
+              required
+              value={form.nomBoutique}
+              onChange={(e) => setForm({ ...form, nomBoutique: e.target.value })}
+              className="h-9 w-full rounded-lg border border-slate-200 px-2.5 text-sm focus:border-blue-600 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-slate-700">
+              Activité / Sous-titre
+            </label>
+            <input
+              type="text"
+              value={form.sousTitre}
+              onChange={(e) => setForm({ ...form, sousTitre: e.target.value })}
+              className="h-9 w-full rounded-lg border border-slate-200 px-2.5 text-sm focus:border-blue-600 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-slate-700">Téléphone</label>
+            <input
+              type="text"
+              value={form.telephone}
+              onChange={(e) => setForm({ ...form, telephone: e.target.value })}
+              className="h-9 w-full rounded-lg border border-slate-200 px-2.5 text-sm focus:border-blue-600 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-slate-700">Adresse</label>
+            <input
+              type="text"
+              value={form.adresse}
+              onChange={(e) => setForm({ ...form, adresse: e.target.value })}
+              className="h-9 w-full rounded-lg border border-slate-200 px-2.5 text-sm focus:border-blue-600 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-slate-700">Nom du gérant</label>
+            <input
+              type="text"
+              value={form.nomGerant}
+              onChange={(e) => setForm({ ...form, nomGerant: e.target.value })}
+              className="h-9 w-full rounded-lg border border-slate-200 px-2.5 text-sm focus:border-blue-600 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-slate-700">Devise</label>
+            <input
+              type="text"
+              value={form.devise}
+              onChange={(e) => setForm({ ...form, devise: e.target.value })}
+              className="h-9 w-full rounded-lg border border-slate-200 px-2.5 text-sm focus:border-blue-600 focus:outline-none"
+            />
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="mb-1 block text-xs font-semibold text-slate-700">
+              Message en pied de facture (optionnel)
+            </label>
+            <input
+              type="text"
+              value={form.piedFacture ?? ''}
+              onChange={(e) => setForm({ ...form, piedFacture: e.target.value })}
+              placeholder="Ex: Merci pour votre confiance ! Garantie boutique 3 mois."
+              className="h-9 w-full rounded-lg border border-slate-200 px-2.5 text-sm focus:border-blue-600 focus:outline-none"
+            />
+          </div>
+
+          <div className="sm:col-span-2 lg:col-span-2">
+            <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+              <Palette className="h-3.5 w-3.5 text-[#0A3072]" />
+              Design par défaut (Facture A4 Pro)
+            </label>
+            <div className="flex flex-wrap gap-1.5">
+              {DESIGNS_FACTURE_A4.map((d) => {
+                const actif = (form.designFactureA4 ?? 'classique_bleu') === d.id;
+                return (
+                  <button
+                    key={d.id}
+                    type="button"
+                    onClick={() =>
+                      setForm({ ...form, designFactureA4: d.id as DesignFactureA4 })
+                    }
+                    className={`inline-flex h-9 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition-colors ${
+                      actif
+                        ? 'border-slate-900 bg-slate-900 text-white shadow-sm'
+                        : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span
+                      className="h-2.5 w-2.5 shrink-0 rounded-full border border-white/40"
+                      style={{ backgroundColor: d.pastille }}
+                    />
+                    {d.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex items-end">
+            <button
+              type="submit"
+              className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-blue-700 px-4 text-sm font-semibold text-white hover:bg-blue-800"
+            >
+              <Save className="h-4 w-4" />
+              Enregistrer
+            </button>
+          </div>
+        </form>
+      </section>
+
+      {/* Exportation complète des données (Excel & Word) */}
+      <section className="rounded-xl border border-slate-200 bg-white p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <Download className="h-4 w-4 text-[#0A3072]" />
+              <h2 className="text-sm font-bold text-slate-900 sm:text-base">
+                Exportation des données
+              </h2>
+            </div>
+            <p className="mt-0.5 text-xs text-slate-500">
+              Synthèse financière, produits &amp; stocks, ventes, crédits clients, dépenses,
+              mouvements et catégories.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              disabled={exportEnCours !== null}
+              onClick={lancerExportExcel}
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 sm:text-sm"
+            >
+              <FileSpreadsheet className="h-4 w-4 shrink-0" />
+              {exportEnCours === 'excel' ? 'Export Excel...' : 'Exporter en Excel (.xlsx)'}
+            </button>
+
+            <button
+              type="button"
+              disabled={exportEnCours !== null}
+              onClick={lancerExportWord}
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#0A3072] px-3.5 text-xs font-semibold text-white hover:bg-blue-900 disabled:opacity-60 sm:text-sm"
+            >
+              <FileText className="h-4 w-4 shrink-0" />
+              {exportEnCours === 'word' ? 'Export Word...' : 'Exporter en Word (.docx)'}
+            </button>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

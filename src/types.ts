@@ -6,6 +6,7 @@ export type PageId =
   | 'produits'
   | 'categories'
   | 'caisse'
+  | 'credits'
   | 'historique'
   | 'stocks'
   | 'depenses'
@@ -28,6 +29,7 @@ export type RoleAssignable = 'admin' | 'comptable' | 'caissier';
 export interface Utilisateur {
   id: string;
   nom: string;
+  nomUtilisateur?: string;
   motDePasse: string;
   role: RoleAssignable;
   dateCreation: string;
@@ -39,6 +41,7 @@ export interface Utilisateur {
 export interface SessionUtilisateur {
   id: string;
   nom: string;
+  nomUtilisateur?: string;
   role: RoleUtilisateur;
 }
 
@@ -89,16 +92,31 @@ export interface LigneVente {
 export type ModePaiement = 'Especes' | 'Orange Money' | 'Moov Money' | 'Carte';
 
 /**
- * Vente validée à la caisse.
+ * Versement effectué pour rembourser une vente à crédit.
+ */
+export interface PaiementCredit {
+  id: string;
+  date: string;
+  montant: number;
+  modePaiement: ModePaiement;
+  note?: string;
+}
+
+/**
+ * Vente validée à la caisse (comptant ou à crédit).
  */
 export interface Vente {
   id: string;
   numeroFacture: string;
   date: string;
   clientNom: string;
+  clientTelephone?: string;
   modePaiement: ModePaiement;
   lignes: LigneVente[];
   total: number;
+  estCredit?: boolean;
+  montantPaye?: number;
+  paiementsCredit?: PaiementCredit[];
 }
 
 /**
@@ -126,6 +144,15 @@ export interface Depense {
 }
 
 /**
+ * Modèles visuels disponibles pour la Facture A4 Pro.
+ */
+export type DesignFactureA4 =
+  | 'classique_bleu'
+  | 'moderne_emeraude'
+  | 'prestige_noir'
+  | 'minimal_epure';
+
+/**
  * Informations générales de la boutique affichées dans l'interface et sur les reçus.
  */
 export interface ParametresBoutique {
@@ -136,6 +163,9 @@ export interface ParametresBoutique {
   nomGerant: string;
   roleGerant: string;
   devise: string;
+  logoDataUrl?: string;
+  piedFacture?: string;
+  designFactureA4?: DesignFactureA4;
 }
 
 /**

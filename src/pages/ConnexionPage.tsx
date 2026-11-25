@@ -1,29 +1,30 @@
 import { FormEvent, useState } from 'react';
-import { Eye, EyeOff, Lock, LogIn } from 'lucide-react';
+import { Eye, EyeOff, Lock, LogIn, User } from 'lucide-react';
 import { ParametresBoutique } from '../types';
 
 interface ConnexionPageProps {
   parametres: ParametresBoutique;
-  onConnexion: (motDePasse: string) => boolean;
+  onConnexion: (nomUtilisateur: string, motDePasse: string) => boolean;
 }
 
 export default function ConnexionPage({ parametres, onConnexion }: ConnexionPageProps) {
+  const [nomUtilisateur, setNomUtilisateur] = useState('');
   const [motDePasse, setMotDePasse] = useState('');
   const [afficherMotDePasse, setAfficherMotDePasse] = useState(false);
   const [erreur, setErreur] = useState('');
 
   const soumettre = (e: FormEvent) => {
     e.preventDefault();
-    const ok = onConnexion(motDePasse);
+    const ok = onConnexion(nomUtilisateur, motDePasse);
     if (!ok) {
-      setErreur('Mot de passe incorrect.');
+      setErreur("Nom d'utilisateur ou mot de passe incorrect.");
     } else {
       setErreur('');
     }
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#041538] p-4">
+    <div className="pt-safe pb-safe relative flex min-h-[100dvh] items-center justify-center overflow-hidden bg-[#041538] p-4">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden p-2 sm:p-6"
@@ -40,10 +41,10 @@ export default function ConnexionPage({ parametres, onConnexion }: ConnexionPage
       <div className="relative z-10 w-full max-w-sm rounded-2xl border border-white/25 bg-[#041538]/55 p-6 shadow-2xl backdrop-blur-sm sm:p-8">
         <div className="mb-6 flex flex-col items-center text-center">
           <img
-            src="/pwa-192x192.png"
-            alt="Icône FLASH-SHOP"
+            src={parametres.logoDataUrl || '/pwa-192x192.png'}
+            alt={`Logo ${parametres.nomBoutique}`}
             referrerPolicy="no-referrer"
-            className="mb-3 h-16 w-16 rounded-2xl object-contain shadow-lg"
+            className="mb-3 h-16 w-16 rounded-2xl bg-white/10 object-contain shadow-lg"
           />
           <h1 className="text-2xl font-bold tracking-tight text-white">
             {parametres.nomBoutique}
@@ -60,6 +61,27 @@ export default function ConnexionPage({ parametres, onConnexion }: ConnexionPage
 
           <div>
             <label className="mb-1.5 block text-xs font-semibold text-blue-50">
+              Nom d&apos;utilisateur
+            </label>
+            <div className="relative">
+              <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+              <input
+                type="text"
+                required
+                autoFocus
+                autoCapitalize="none"
+                autoCorrect="off"
+                autoComplete="username"
+                value={nomUtilisateur}
+                onChange={(e) => setNomUtilisateur(e.target.value)}
+                placeholder="Ex: admin ou ibrahim.compta"
+                className="min-h-[46px] w-full rounded-xl border border-white/30 bg-white/95 py-2.5 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-orange-400 focus:bg-white focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold text-blue-50">
               Mot de passe
             </label>
             <div className="relative">
@@ -67,7 +89,7 @@ export default function ConnexionPage({ parametres, onConnexion }: ConnexionPage
               <input
                 type={afficherMotDePasse ? 'text' : 'password'}
                 required
-                autoFocus
+                autoComplete="current-password"
                 value={motDePasse}
                 onChange={(e) => setMotDePasse(e.target.value)}
                 placeholder="Saisissez votre mot de passe"

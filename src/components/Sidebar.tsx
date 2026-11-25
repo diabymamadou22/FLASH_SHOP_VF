@@ -97,7 +97,9 @@ export default function Sidebar({
           <nav className="space-y-1 px-3 py-4" aria-label="Navigation principale">
             {menuAutorise.map((item) => {
               const Icone = item.icone;
-              const estActif = pageActive === item.id;
+              const estActif =
+                pageActive === item.id ||
+                (item.id === 'parametres' && pageActive === 'utilisateurs');
               return (
                 <button
                   key={item.id}

@@ -14,6 +14,7 @@ import {
   Settings,
   ShoppingCart,
   UserCircle2,
+  Users,
   Wallet,
 } from 'lucide-react';
 import { LIBELLES_ROLE, peutAccederPage } from '../services/auth';
@@ -39,6 +40,7 @@ const TITRES_PAGES: Record<PageId, { titre: string; icone: typeof Home }> = {
   stocks: { titre: 'Stocks', icone: Boxes },
   depenses: { titre: 'Dépenses', icone: Wallet },
   rapports: { titre: 'Rapports', icone: BarChart3 },
+  utilisateurs: { titre: 'Utilisateurs & rôles', icone: Users },
   parametres: { titre: 'Paramètres', icone: Settings },
 };
 

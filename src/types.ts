@@ -11,6 +11,7 @@ export type PageId =
   | 'stocks'
   | 'depenses'
   | 'rapports'
+  | 'utilisateurs'
   | 'parametres';
 
 /**

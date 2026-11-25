@@ -12,6 +12,7 @@ import ParametresPage from './pages/ParametresPage';
 import ProduitsPage from './pages/ProduitsPage';
 import RapportsPage from './pages/RapportsPage';
 import StocksPage from './pages/StocksPage';
+import UtilisateursPage from './pages/UtilisateursPage';
 import VentesCaissePage from './pages/VentesCaissePage';
 import {
   authentifierUtilisateur,
@@ -395,14 +396,22 @@ export default function App() {
             />
           )}
 
-          {pageCourante === 'parametres' && (
-            <ParametresPage
-              donnees={donnees}
+          {pageCourante === 'utilisateurs' && (
+            <UtilisateursPage
+              utilisateurs={donnees.utilisateurs}
               utilisateurConnecteId={session.id}
-              onSauvegarderParametres={sauvegarderParametres}
               onAjouterUtilisateur={ajouterUtilisateur}
               onModifierUtilisateur={modifierUtilisateur}
               onSupprimerUtilisateur={supprimerUtilisateur}
+              onRetourParametres={() => changerPage('parametres')}
+            />
+          )}
+
+          {pageCourante === 'parametres' && (
+            <ParametresPage
+              donnees={donnees}
+              onSauvegarderParametres={sauvegarderParametres}
+              onAllerUtilisateurs={() => changerPage('utilisateurs')}
             />
           )}
         </main>

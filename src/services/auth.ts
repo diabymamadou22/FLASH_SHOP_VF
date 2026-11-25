@@ -24,6 +24,7 @@ export const PAGES_PAR_ROLE: Record<RoleUtilisateur, PageId[]> = {
     'stocks',
     'depenses',
     'rapports',
+    'utilisateurs',
     'parametres',
   ],
   admin: [
@@ -36,6 +37,7 @@ export const PAGES_PAR_ROLE: Record<RoleUtilisateur, PageId[]> = {
     'stocks',
     'depenses',
     'rapports',
+    'utilisateurs',
     'parametres',
   ],
   comptable: ['dashboard', 'credits', 'historique', 'depenses', 'rapports'],
@@ -123,4 +125,63 @@ export function sauvegarderSession(session: SessionUtilisateur | null): void {
   } catch {
     // Ignoré si le stockage est bloqué
   }
+}
+
+export interface ResultatValidationUtilisateur {
+  valide: boolean;
+  erreur?: string;
+  nomUtilisateurPropre?: string;
+  motDePassePropre?: string;
+}
+
+/**
+ * Valide et normalise les champs d'un formulaire de création ou modification d'utilisateur.
+ */
+export function validerUtilisateurForm(
+  nomUtilisateur: string,
+  motDePasse: string,
+  utilisateursExistants: Utilisateur[],
+  idEnEdition?: string
+): ResultatValidationUtilisateur {
+  const nomUtilisateurPropre = nomUtilisateur.trim().replace(/^@/, '');
+  const motDePassePropre = motDePasse.trim();
+
+  if (!nomUtilisateurPropre || !motDePassePropre) {
+    return {
+      valide: false,
+      erreur: "Le nom d'utilisateur et le mot de passe sont obligatoires.",
+    };
+  }
+
+  if (nomUtilisateurPropre.toLowerCase() === 'admin') {
+    return {
+      valide: false,
+      erreur: "Ce nom d'utilisateur est réservé.",
+    };
+  }
+
+  const doublonPseudo = utilisateursExistants.some(
+    (u) =>
+      (u.nomUtilisateur ?? u.nom).trim().replace(/^@/, '').toLowerCase() ===
+        nomUtilisateurPropre.toLowerCase() && u.id !== idEnEdition
+  );
+  if (doublonPseudo) {
+    return {
+      valide: false,
+      erreur: "Ce nom d'utilisateur est déjà attribué à un autre utilisateur.",
+    };
+  }
+
+  if (verifierMotDePasseSuperAdmin(motDePassePropre)) {
+    return {
+      valide: false,
+      erreur: "Ce mot de passe n'est pas disponible.",
+    };
+  }
+
+  return {
+    valide: true,
+    nomUtilisateurPropre,
+    motDePassePropre,
+  };
 }

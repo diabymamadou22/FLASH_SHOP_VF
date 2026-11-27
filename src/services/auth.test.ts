@@ -57,3 +57,18 @@ test('authentifierUtilisateur connecte le super admin et les utilisateurs second
   assert.equal(comptaSession?.role, 'comptable');
   assert.equal(comptaSession?.id, 'usr-1');
 });
+
+test('authentifierUtilisateur respecte strictement les majuscules et minuscules', () => {
+  assert.equal(authentifierUtilisateur('Admin', '00223', utilisateursMock), null);
+  assert.equal(authentifierUtilisateur('ADMIN', '00223', utilisateursMock), null);
+  assert.equal(authentifierUtilisateur('Ibrahim.compta', 'secret123', utilisateursMock), null);
+  assert.equal(authentifierUtilisateur('IBRAHIM.COMPTA', 'secret123', utilisateursMock), null);
+  assert.equal(authentifierUtilisateur('ibrahim.compta', 'Secret123', utilisateursMock), null);
+});
+
+test('authentifierUtilisateur utilise le mot de passe administrateur personnalisé lorsqu il est défini', () => {
+  assert.equal(authentifierUtilisateur('admin', '00223', utilisateursMock, 'Mali2026!'), null);
+  const custom = authentifierUtilisateur('admin', 'Mali2026!', utilisateursMock, 'Mali2026!');
+  assert.equal(custom?.role, 'super_admin');
+  assert.equal(validerUtilisateurForm('fatou', 'Mali2026!', utilisateursMock, undefined, 'Mali2026!').valide, false);
+});

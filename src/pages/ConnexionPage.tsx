@@ -143,7 +143,7 @@ export default function ConnexionPage({ parametres, onConnexion }: ConnexionPage
   const titreFin = indexTiret > 0 ? nomBoutique.slice(indexTiret) : '';
 
   return (
-    <div className="pt-safe pb-safe relative flex min-h-[100dvh] items-center justify-center overflow-hidden bg-[#020E2E] p-4 sm:p-6">
+    <div className="pt-safe pb-safe relative flex min-h-[100dvh] items-center justify-center overflow-x-clip overflow-y-auto bg-[#020E2E] p-4 sm:p-6">
       {/* Arrière-plan futuriste bleu & courbes orange */}
       <div
         aria-hidden="true"
@@ -338,7 +338,7 @@ export default function ConnexionPage({ parametres, onConnexion }: ConnexionPage
 
             <button
               type="submit"
-              className="inline-flex min-h-[46px] w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#FF930F] to-[#FF6A00] py-2.5 text-sm font-bold text-white shadow-[0_8px_22px_rgba(255,115,0,0.45)] transition-all hover:from-[#FFA229] hover:to-[#FF7A14] active:scale-[0.99]"
+              className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#FF930F] to-[#FF6A00] text-sm font-bold text-white shadow-[0_8px_22px_rgba(255,115,0,0.45)] transition-all hover:from-[#FFA229] hover:to-[#FF7A14] active:scale-[0.99]"
             >
               <LogIn className="h-4 w-4" />
               <span>Se connecter</span>

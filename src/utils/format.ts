@@ -44,7 +44,10 @@ export function formatDateHeure(isoDate: string): string {
  * Formate une date ISO en jour/mois/année (ex: 16/11/2026).
  */
 export function formatDateCourte(isoDate: string): string {
-  const d = new Date(isoDate);
+  const matchLocal = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate.trim());
+  const d = matchLocal
+    ? new Date(Number(matchLocal[1]), Number(matchLocal[2]) - 1, Number(matchLocal[3]))
+    : new Date(isoDate);
   if (Number.isNaN(d.getTime())) return isoDate;
   return d.toLocaleDateString('fr-FR', {
     day: '2-digit',

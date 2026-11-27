@@ -1,6 +1,6 @@
 import { FileText, Palette, Receipt, StickyNote } from 'lucide-react';
 import { DesignFactureA4, ParametresBoutique, Vente } from '../types';
-import { formatDateHeure, formatPrix } from '../utils/format';
+import { formatDateCourte, formatDateHeure, formatPrix } from '../utils/format';
 
 export type FormatImpression = 'a4_pro' | 'ticket_80' | 'a5_compact';
 
@@ -106,9 +106,9 @@ export default function FactureImprimable({
   return (
     <div className="space-y-3">
       {/* Sélecteur du type d'impression et du design A4 Pro (masqué à l'impression) */}
-      <div className="no-print space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-2.5">
+      <div className="no-print space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-2.5 dark:border-slate-700 dark:bg-slate-800/80">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="px-1.5 text-xs font-semibold text-slate-600">
+          <span className="px-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
             Type d&apos;impression :
           </span>
           <div className="flex flex-wrap gap-1.5">
@@ -120,13 +120,13 @@ export default function FactureImprimable({
                   key={opt.id}
                   type="button"
                   onClick={() => onChangerFormat(opt.id)}
-                  className={`inline-flex min-h-[34px] items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors ${
+                  className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-semibold transition-colors ${
                     actif
                       ? 'bg-[#0A3072] text-white shadow-sm'
-                      : 'bg-white text-slate-700 hover:bg-slate-100'
+                      : 'bg-white text-slate-700 hover:bg-slate-100 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-700'
                   }`}
                 >
-                  <Icone className="h-3.5 w-3.5" />
+                  <Icone className="h-3 w-3" />
                   {opt.label}
                 </button>
               );
@@ -135,9 +135,9 @@ export default function FactureImprimable({
         </div>
 
         {format === 'a4_pro' && onChangerDesignA4 && (
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200/80 pt-2">
-            <span className="inline-flex items-center gap-1.5 px-1.5 text-xs font-semibold text-slate-600">
-              <Palette className="h-3.5 w-3.5 text-[#0A3072]" />
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200/80 pt-2 dark:border-slate-700">
+            <span className="inline-flex items-center gap-1.5 px-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
+              <Palette className="h-3.5 w-3.5 text-[#0A3072] dark:text-blue-400" />
               Design A4 Pro :
             </span>
             <div className="flex flex-wrap gap-1.5">
@@ -148,14 +148,14 @@ export default function FactureImprimable({
                     key={d.id}
                     type="button"
                     onClick={() => onChangerDesignA4(d.id)}
-                    className={`inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition-colors ${
+                    className={`inline-flex h-7 items-center gap-1 rounded-md border px-2 text-[11px] font-semibold transition-colors ${
                       actif
-                        ? 'border-slate-900 bg-slate-900 text-white shadow-sm'
-                        : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-100'
+                        ? 'border-slate-900 bg-slate-900 text-white shadow-sm dark:border-blue-500 dark:bg-blue-700'
+                        : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-700'
                     }`}
                   >
                     <span
-                      className="h-2.5 w-2.5 shrink-0 rounded-full border border-white/40"
+                      className="h-2 w-2 shrink-0 rounded-full border border-white/40"
                       style={{ backgroundColor: d.pastille }}
                     />
                     {d.label}
@@ -242,8 +242,19 @@ export default function FactureImprimable({
                     {vente.estCredit ? 'Crédit client' : vente.modePaiement}
                   </span>
                 </div>
+                {vente.estCredit && vente.dateEcheanceCredit && (
+                  <div className="mt-0.5 text-xs text-orange-700">
+                    Échéance :{' '}
+                    <span className="font-semibold">
+                      {formatDateCourte(vente.dateEcheanceCredit)}
+                    </span>
+                  </div>
+                )}
                 <div className="mt-0.5 text-xs text-slate-600">
-                  Établi par : <span className="font-semibold">{parametres.nomGerant}</span>
+                  Établi par :{' '}
+                  <span className="font-semibold">
+                    {vente.vendeur || parametres.nomGerant}
+                  </span>
                 </div>
               </div>
             </div>
@@ -312,6 +323,22 @@ export default function FactureImprimable({
                   <span>Nombre d&apos;articles</span>
                   <span className="font-mono font-semibold tabular-nums">{nbArticles}</span>
                 </div>
+                {(vente.remise ?? 0) > 0 && (
+                  <>
+                    <div className="flex justify-between text-xs text-slate-600">
+                      <span>Sous-total</span>
+                      <span className="font-mono font-semibold tabular-nums">
+                        {formatPrix(vente.sousTotalBrut ?? vente.total + (vente.remise ?? 0), parametres.devise)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-xs font-semibold text-rose-600">
+                      <span>Remise accordée</span>
+                      <span className="font-mono tabular-nums">
+                        -{formatPrix(vente.remise ?? 0, parametres.devise)}
+                      </span>
+                    </div>
+                  </>
+                )}
                 <div
                   className={`flex justify-between border-t border-slate-200 pt-2 text-base font-extrabold ${classesTotalA4}`}
                 >
@@ -403,6 +430,14 @@ export default function FactureImprimable({
             <div>
               Client : <span className="font-bold text-slate-900">{vente.clientNom}</span>
               {vente.clientTelephone ? ` (${vente.clientTelephone})` : ''}
+              {vente.estCredit && vente.dateEcheanceCredit && (
+                <span className="ml-2 font-semibold text-orange-700">
+                  · Échéance : {formatDateCourte(vente.dateEcheanceCredit)}
+                </span>
+              )}
+              {vente.vendeur && (
+                <span className="ml-2 text-slate-500">· Par : {vente.vendeur}</span>
+              )}
             </div>
             <div className="text-slate-600">{nbArticles} article(s)</div>
           </div>
@@ -435,6 +470,22 @@ export default function FactureImprimable({
           </div>
 
           <div className="mt-3 space-y-1 border-t border-slate-200 pt-3">
+            {(vente.remise ?? 0) > 0 && (
+              <>
+                <div className="flex justify-between text-xs text-slate-600">
+                  <span>Sous-total</span>
+                  <span className="font-mono tabular-nums">
+                    {formatPrix(vente.sousTotalBrut ?? vente.total + (vente.remise ?? 0), parametres.devise)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-xs font-semibold text-rose-600">
+                  <span>Remise</span>
+                  <span className="font-mono tabular-nums">
+                    -{formatPrix(vente.remise ?? 0, parametres.devise)}
+                  </span>
+                </div>
+              </>
+            )}
             <div className="flex justify-between text-sm font-extrabold text-[#0A3072]">
               <span>TOTAL À PAYER</span>
               <span className="font-mono tabular-nums">
@@ -509,6 +560,18 @@ export default function FactureImprimable({
               <span>Règlement:</span>
               <span>{vente.estCredit ? 'Crédit' : vente.modePaiement}</span>
             </div>
+            {vente.estCredit && vente.dateEcheanceCredit && (
+              <div className="flex justify-between font-bold">
+                <span>Échéance:</span>
+                <span>{formatDateCourte(vente.dateEcheanceCredit)}</span>
+              </div>
+            )}
+            {vente.vendeur && (
+              <div className="flex justify-between">
+                <span>Vendeur:</span>
+                <span>{vente.vendeur}</span>
+              </div>
+            )}
           </div>
 
           <div className="my-2.5 border-t border-dashed border-slate-400" />
@@ -532,6 +595,20 @@ export default function FactureImprimable({
           <div className="my-2.5 border-t border-dashed border-slate-400" />
 
           <div className="space-y-1 tabular-nums">
+            {(vente.remise ?? 0) > 0 && (
+              <>
+                <div className="flex justify-between text-[11px]">
+                  <span>SOUS-TOTAL</span>
+                  <span>
+                    {formatPrix(vente.sousTotalBrut ?? vente.total + (vente.remise ?? 0), parametres.devise)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-[11px] font-bold">
+                  <span>REMISE</span>
+                  <span>-{formatPrix(vente.remise ?? 0, parametres.devise)}</span>
+                </div>
+              </>
+            )}
             <div className="flex justify-between text-sm font-extrabold">
               <span>TOTAL</span>
               <span>{formatPrix(vente.total, parametres.devise)}</span>

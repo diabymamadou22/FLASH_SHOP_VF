@@ -1,10 +1,17 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
-  html,
-  body {
-    overflow-x: hidden;
-    overscroll-behavior-y: contain;
+  :root {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  html {
+    overflow-x: clip;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
   }
@@ -47,6 +54,21 @@
 
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@keyframes toast-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.toast-slide-in {
+  animation: toast-slide-in 0.18s ease-out both;
 }
 
 @media print {

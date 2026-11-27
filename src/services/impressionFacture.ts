@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf';
 import { FormatImpression } from '../components/FactureImprimable';
 import { DesignFactureA4, ParametresBoutique, Vente } from '../types';
-import { formatDateHeure, formatPrix } from '../utils/format';
+import { formatDateCourte, formatDateHeure, formatPrix } from '../utils/format';
 import {
   LogoPdfResolu,
   ajouterLogoDansPdf,
@@ -171,8 +171,16 @@ function genererPdfA4(
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
   doc.setTextColor(51, 65, 85);
-  doc.text(`Mode : ${vente.estCredit ? 'Crédit client' : vente.modePaiement}`, 112, y + 12.5);
-  doc.text(`Établi par : ${parametres.nomGerant}`, 112, y + 18);
+  doc.text(`Mode : ${vente.estCredit ? 'Crédit client' : vente.modePaiement}`, 112, y + 11.5);
+  const auteurVente = vente.vendeur || parametres.nomGerant;
+  if (vente.estCredit && vente.dateEcheanceCredit) {
+    doc.setTextColor(194, 65, 12);
+    doc.text(`Échéance : ${formatDateCourte(vente.dateEcheanceCredit)}`, 112, y + 16);
+    doc.setTextColor(51, 65, 85);
+    doc.text(`Établi par : ${auteurVente}`, 112, y + 20.3);
+  } else {
+    doc.text(`Établi par : ${auteurVente}`, 112, y + 18);
+  }
 
   // Tableau des articles
   y += 30;
@@ -246,7 +254,9 @@ function genererPdfA4(
     });
   }
 
-  const hauteurBoxTotaux = vente.estCredit ? 30 : 18;
+  const aRemise = (vente.remise ?? 0) > 0;
+  const decalageRemise = aRemise ? 11 : 0;
+  const hauteurBoxTotaux = (vente.estCredit ? 30 : 18) + decalageRemise;
   doc.setFillColor(palette.carteFond[0], palette.carteFond[1], palette.carteFond[2]);
   doc.setDrawColor(palette.carteBord[0], palette.carteBord[1], palette.carteBord[2]);
   doc.roundedRect(122, y, 74, hauteurBoxTotaux, 2, 2, 'FD');
@@ -257,22 +267,31 @@ function genererPdfA4(
   doc.text("Nombre d'articles", 126, y + 6);
   doc.text(String(nbArticles), 192, y + 6, { align: 'right' });
 
+  if (aRemise) {
+    const brut = vente.sousTotalBrut ?? vente.total + (vente.remise ?? 0);
+    doc.text('Sous-total', 126, y + 11.5);
+    doc.text(formatPrix(brut, devise), 192, y + 11.5, { align: 'right' });
+    doc.setTextColor(225, 29, 72);
+    doc.text('Remise', 126, y + 16.5);
+    doc.text(`-${formatPrix(vente.remise ?? 0, devise)}`, 192, y + 16.5, { align: 'right' });
+  }
+
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
   doc.setTextColor(palette.totalTexte[0], palette.totalTexte[1], palette.totalTexte[2]);
-  doc.text('TOTAL', 126, y + 13.5);
-  doc.text(formatPrix(vente.total, devise), 192, y + 13.5, { align: 'right' });
+  doc.text('TOTAL', 126, y + 13.5 + decalageRemise);
+  doc.text(formatPrix(vente.total, devise), 192, y + 13.5 + decalageRemise, { align: 'right' });
 
   if (vente.estCredit) {
     doc.setFontSize(8.5);
     doc.setTextColor(5, 150, 105);
-    doc.text('Montant payé', 126, y + 20.5);
-    doc.text(formatPrix(paye, devise), 192, y + 20.5, { align: 'right' });
+    doc.text('Montant payé', 126, y + 20.5 + decalageRemise);
+    doc.text(formatPrix(paye, devise), 192, y + 20.5 + decalageRemise, { align: 'right' });
 
     doc.setFontSize(9.5);
     doc.setTextColor(234, 88, 12);
-    doc.text('Reste à payer', 126, y + 26.5);
-    doc.text(formatPrix(reste, devise), 192, y + 26.5, { align: 'right' });
+    doc.text('Reste à payer', 126, y + 26.5 + decalageRemise);
+    doc.text(formatPrix(reste, devise), 192, y + 26.5 + decalageRemise, { align: 'right' });
   }
 
   // Signatures & Pied de page
@@ -349,9 +368,15 @@ function genererPdfA5(
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8.5);
   doc.setTextColor(15, 23, 42);
-  const infoClient = vente.clientTelephone
-    ? `Client : ${vente.clientNom} (${vente.clientTelephone})`
-    : `Client : ${vente.clientNom}`;
+  const echeanceA5 =
+    vente.estCredit && vente.dateEcheanceCredit
+      ? ` · Échéance : ${formatDateCourte(vente.dateEcheanceCredit)}`
+      : '';
+  const infoClient = `${
+    vente.clientTelephone
+      ? `Client : ${vente.clientNom} (${vente.clientTelephone})`
+      : `Client : ${vente.clientNom}`
+  }${echeanceA5}`;
   doc.text(infoClient, 13, y + 6);
 
   y += 14;
@@ -382,6 +407,19 @@ function genererPdfA5(
 
   doc.line(10, y + 1, 138, y + 1);
   y += 7;
+  if ((vente.remise ?? 0) > 0) {
+    const brut = vente.sousTotalBrut ?? vente.total + (vente.remise ?? 0);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(71, 85, 105);
+    doc.text('Sous-total', 10, y);
+    doc.text(formatPrix(brut, devise), 138, y, { align: 'right' });
+    y += 4.8;
+    doc.setTextColor(225, 29, 72);
+    doc.text('Remise', 10, y);
+    doc.text(`-${formatPrix(vente.remise ?? 0, devise)}`, 138, y, { align: 'right' });
+    y += 5.5;
+  }
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10.5);
   doc.setTextColor(10, 48, 114);
@@ -420,7 +458,16 @@ function genererPdfTicket80(
     parametres.piedFacture?.trim() ||
     'Merci pour votre confiance ! Les articles vendus sont garantis selon nos conditions.';
 
-  const hauteurEstimee = Math.max(130, 94 + vente.lignes.length * 11 + (vente.estCredit ? 18 : 0));
+  const aRemiseTicket = (vente.remise ?? 0) > 0;
+  const hauteurEstimee = Math.max(
+    130,
+    94 +
+      vente.lignes.length * 11 +
+      (vente.estCredit ? 18 : 0) +
+      (vente.estCredit && vente.dateEcheanceCredit ? 5 : 0) +
+      (aRemiseTicket ? 9 : 0) +
+      (vente.vendeur ? 4 : 0)
+  );
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [80, hauteurEstimee] });
 
   let y = 8;
@@ -460,6 +507,16 @@ function genererPdfTicket80(
   }
   doc.text(`Règlement: ${vente.estCredit ? 'Crédit' : vente.modePaiement}`, 5, y);
   y += 4;
+  if (vente.estCredit && vente.dateEcheanceCredit) {
+    doc.setFont('courier', 'bold');
+    doc.text(`Échéance: ${formatDateCourte(vente.dateEcheanceCredit)}`, 5, y);
+    doc.setFont('courier', 'normal');
+    y += 4;
+  }
+  if (vente.vendeur) {
+    doc.text(`Vendeur: ${vente.vendeur}`, 5, y);
+    y += 4;
+  }
 
   doc.text('------------------------------------------', 40, y, { align: 'center' });
   y += 4;
@@ -480,6 +537,18 @@ function genererPdfTicket80(
   doc.setFont('courier', 'normal');
   doc.text('------------------------------------------', 40, y, { align: 'center' });
   y += 4.5;
+
+  if (aRemiseTicket) {
+    const brut = vente.sousTotalBrut ?? vente.total + (vente.remise ?? 0);
+    doc.setFont('courier', 'normal');
+    doc.setFontSize(8);
+    doc.text('SOUS-TOTAL', 5, y);
+    doc.text(formatPrix(brut, devise), 75, y, { align: 'right' });
+    y += 4;
+    doc.text('REMISE', 5, y);
+    doc.text(`-${formatPrix(vente.remise ?? 0, devise)}`, 75, y, { align: 'right' });
+    y += 4.2;
+  }
 
   doc.setFont('courier', 'bold');
   doc.setFontSize(10);

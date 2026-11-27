@@ -5,20 +5,24 @@ import {
   History,
   Home,
   LayoutGrid,
+  Moon,
   Package,
   Settings,
   ShoppingCart,
+  Sun,
   Wallet,
   X,
 } from 'lucide-react';
 import { peutAccederPage } from '../services/auth';
-import { PageId, ParametresBoutique, RoleUtilisateur } from '../types';
+import { PageId, ParametresBoutique, RoleUtilisateur, ThemeApparence } from '../types';
 
 interface SidebarProps {
   pageActive: PageId;
   role: RoleUtilisateur;
   onChangerPage: (page: PageId) => void;
   parametres: ParametresBoutique;
+  theme: ThemeApparence;
+  onChangerTheme: (theme: ThemeApparence) => void;
   ouvertMobile: boolean;
   onFermerMobile: () => void;
 }
@@ -41,6 +45,8 @@ export default function Sidebar({
   role,
   onChangerPage,
   parametres,
+  theme,
+  onChangerTheme,
   ouvertMobile,
   onFermerMobile,
 }: SidebarProps) {
@@ -50,23 +56,24 @@ export default function Sidebar({
   };
 
   const menuAutorise = ELEMENTS_MENU.filter((item) => peutAccederPage(role, item.id));
+  const estThemeSombre = theme === 'sombre';
 
   return (
     <>
       {ouvertMobile && (
         <div
-          className="fixed inset-0 z-30 bg-slate-900/50 lg:hidden"
+          className="fixed inset-0 z-30 bg-slate-900/50 dark:bg-slate-950/75 lg:hidden"
           onClick={onFermerMobile}
           aria-hidden="true"
         />
       )}
 
       <aside
-        className={`no-print pt-safe pb-safe fixed inset-y-0 left-0 z-40 flex w-64 flex-col justify-between bg-gradient-to-b from-[#0A3072] to-[#061E4A] text-white transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:shrink-0 lg:translate-x-0 ${
+        className={`no-print pt-safe pb-safe fixed inset-y-0 left-0 z-40 flex w-64 flex-col justify-between bg-gradient-to-b from-[#0A3072] to-[#061E4A] text-white transition-transform duration-200 dark:border-r dark:border-slate-800 dark:from-slate-900 dark:to-slate-950 lg:sticky lg:top-0 lg:h-dvh lg:shrink-0 lg:translate-x-0 ${
           ouvertMobile ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
           {/* En-tête de la marque */}
           <div className="flex items-center justify-between border-b border-white/10 px-5 py-5">
             <div className="flex items-center gap-3">
@@ -94,7 +101,7 @@ export default function Sidebar({
           </div>
 
           {/* Menu principal filtré selon le rôle */}
-          <nav className="space-y-1 px-3 py-4" aria-label="Navigation principale">
+          <nav className="space-y-1 px-3 py-3" aria-label="Navigation principale">
             {menuAutorise.map((item) => {
               const Icone = item.icone;
               const estActif =
@@ -105,7 +112,7 @@ export default function Sidebar({
                   key={item.id}
                   type="button"
                   onClick={() => selectionner(item.id)}
-                  className={`flex min-h-[42px] w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-sm font-medium transition-colors whitespace-nowrap ${
+                  className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[13px] font-medium transition-colors whitespace-nowrap ${
                     estActif
                       ? 'bg-orange-500 text-white shadow-sm'
                       : 'text-blue-100 hover:bg-white/10 hover:text-white'
@@ -117,6 +124,44 @@ export default function Sidebar({
               );
             })}
           </nav>
+
+          {/* Sélecteur de thème placé sous Paramètres */}
+          <div className="px-3 pb-4 pt-1">
+            <div className="border-t border-white/10 pt-3">
+              <div
+                role="group"
+                aria-label="Thème d'affichage"
+                className="grid grid-cols-2 gap-1 rounded-lg bg-white/10 p-0.5"
+              >
+                <button
+                  type="button"
+                  onClick={() => onChangerTheme('clair')}
+                  aria-pressed={!estThemeSombre}
+                  className={`inline-flex h-7 items-center justify-center gap-1.5 rounded-md px-2 text-xs font-semibold transition-colors ${
+                    !estThemeSombre
+                      ? 'bg-white text-[#0A3072] shadow-sm'
+                      : 'text-blue-100 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  <Sun className="h-3.5 w-3.5 shrink-0" />
+                  Clair
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onChangerTheme('sombre')}
+                  aria-pressed={estThemeSombre}
+                  className={`inline-flex h-7 items-center justify-center gap-1.5 rounded-md px-2 text-xs font-semibold transition-colors ${
+                    estThemeSombre
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-blue-100 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  <Moon className="h-3.5 w-3.5 shrink-0" />
+                  Sombre
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </aside>
     </>

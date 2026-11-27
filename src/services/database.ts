@@ -16,10 +16,12 @@ function normaliserBase(parsed: Partial<BaseDonnees>): BaseDonnees {
     ventes: parsed.ventes ?? DONNEES_INITIALES.ventes,
     mouvementsStock: parsed.mouvementsStock ?? DONNEES_INITIALES.mouvementsStock,
     depenses: parsed.depenses ?? DONNEES_INITIALES.depenses,
+    apportsCaisse: Array.isArray(parsed.apportsCaisse) ? parsed.apportsCaisse : [],
     utilisateurs: parsed.utilisateurs ?? DONNEES_INITIALES.utilisateurs,
     parametres: {
       ...DONNEES_INITIALES.parametres,
       ...(parsed.parametres ?? {}),
+      theme: parsed.parametres?.theme === 'sombre' ? 'sombre' : 'clair',
     },
   };
 }
@@ -151,4 +153,11 @@ export function importerBaseJson(contenuJson: string): BaseDonnees {
   const propre = normaliserBase(parsed);
   sauvegarderBase(propre);
   return propre;
+}
+
+/**
+ * Sérialise l'ensemble de la base de données pour une sauvegarde JSON portable.
+ */
+export function exporterBaseJson(donnees: BaseDonnees): string {
+  return JSON.stringify(normaliserBase(donnees), null, 2);
 }

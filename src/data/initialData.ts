@@ -13,6 +13,7 @@ export const DONNEES_INITIALES: BaseDonnees = {
     nomGerant: 'Admin',
     roleGerant: 'Administrateur',
     devise: 'FCFA',
+    theme: 'clair',
   },
   utilisateurs: [],
   categories: [
@@ -254,4 +255,5 @@ export const DONNEES_INITIALES: BaseDonnees = {
       date: '2026-11-08T11:15:00.000Z',
     },
   ],
+  apportsCaisse: [],
 };

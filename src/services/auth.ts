@@ -60,11 +60,19 @@ export function getPageDefautRole(role: RoleUtilisateur): PageId {
   return 'produits';
 }
 
+export function getCodeMaitreActif(codeMaitrePersonnalise?: string): string {
+  const propre = codeMaitrePersonnalise?.trim();
+  return propre || CODE_MAITRE;
+}
+
 /**
- * Vérifie le mot de passe principal (invisible dans les paramètres).
+ * Vérifie le mot de passe principal (par défaut ou personnalisé dans Paramètres).
  */
-export function verifierMotDePasseSuperAdmin(saisie: string): boolean {
-  return saisie.trim() === CODE_MAITRE;
+export function verifierMotDePasseSuperAdmin(
+  saisie: string,
+  codeMaitrePersonnalise?: string
+): boolean {
+  return saisie.trim() === getCodeMaitreActif(codeMaitrePersonnalise);
 }
 
 /**
@@ -75,13 +83,17 @@ export function verifierMotDePasseSuperAdmin(saisie: string): boolean {
 export function authentifierUtilisateur(
   nomUtilisateur: string,
   motDePasse: string,
-  utilisateurs: Utilisateur[]
+  utilisateurs: Utilisateur[],
+  codeMaitrePersonnalise?: string
 ): SessionUtilisateur | null {
-  const pseudoPropre = nomUtilisateur.trim().replace(/^@/, '').toLowerCase();
+  const pseudoPropre = nomUtilisateur.trim().replace(/^@/, '');
   const mdpPropre = motDePasse.trim();
   if (!pseudoPropre || !mdpPropre) return null;
 
-  if (pseudoPropre === 'admin' && verifierMotDePasseSuperAdmin(mdpPropre)) {
+  if (
+    pseudoPropre === 'admin' &&
+    verifierMotDePasseSuperAdmin(mdpPropre, codeMaitrePersonnalise)
+  ) {
     return {
       id: 'compte-principal',
       nom: 'Admin',
@@ -91,7 +103,7 @@ export function authentifierUtilisateur(
   }
 
   const trouve = utilisateurs.find((u) => {
-    const pseudoCompte = (u.nomUtilisateur ?? u.nom).trim().replace(/^@/, '').toLowerCase();
+    const pseudoCompte = (u.nomUtilisateur ?? u.nom).trim().replace(/^@/, '');
     return pseudoCompte === pseudoPropre && u.motDePasse === mdpPropre;
   });
   if (!trouve) return null;
@@ -141,7 +153,8 @@ export function validerUtilisateurForm(
   nomUtilisateur: string,
   motDePasse: string,
   utilisateursExistants: Utilisateur[],
-  idEnEdition?: string
+  idEnEdition?: string,
+  codeMaitrePersonnalise?: string
 ): ResultatValidationUtilisateur {
   const nomUtilisateurPropre = nomUtilisateur.trim().replace(/^@/, '');
   const motDePassePropre = motDePasse.trim();
@@ -172,7 +185,7 @@ export function validerUtilisateurForm(
     };
   }
 
-  if (verifierMotDePasseSuperAdmin(motDePassePropre)) {
+  if (verifierMotDePasseSuperAdmin(motDePassePropre, codeMaitrePersonnalise)) {
     return {
       valide: false,
       erreur: "Ce mot de passe n'est pas disponible.",

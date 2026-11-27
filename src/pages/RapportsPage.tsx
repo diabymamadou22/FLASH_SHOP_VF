@@ -59,54 +59,82 @@ export default function RapportsPage({
     return Array.from(ensemble).sort((a, b) => b.localeCompare(a));
   }, [ventes, depenses, aujourdhui]);
 
-  const { ventesPeriode, depensesPeriode, titrePeriode, sousTitrePeriode, slugPeriode } =
-    useMemo(() => {
-      const correspondPeriode = (iso: string): boolean => {
-        const cle = cleDateLocale(iso);
-        if (typePeriode === 'jour') return cle === dateJour;
-        if (typePeriode === 'mois') return cle.slice(0, 7) === moisChoisi;
-        if (typePeriode === 'annee') return cle.slice(0, 4) === anneeChoisie;
-        return true;
-      };
+  const {
+    ventesPeriode,
+    depensesPeriode,
+    encaissementsSurPeriode,
+    encaissementsCreditsPeriode,
+    titrePeriode,
+    sousTitrePeriode,
+    slugPeriode,
+  } = useMemo(() => {
+    const correspondPeriode = (iso: string): boolean => {
+      const cle = cleDateLocale(iso);
+      if (typePeriode === 'jour') return cle === dateJour;
+      if (typePeriode === 'mois') return cle.slice(0, 7) === moisChoisi;
+      if (typePeriode === 'annee') return cle.slice(0, 4) === anneeChoisie;
+      return true;
+    };
 
-      const vFiltrees = ventes.filter((v) => correspondPeriode(v.date));
-      const dFiltrees = depenses.filter((d) => correspondPeriode(d.date));
+    const vFiltrees = ventes.filter((v) => correspondPeriode(v.date));
+    const dFiltrees = depenses.filter((d) => correspondPeriode(d.date));
 
-      let titre = 'Rapport global';
-      let sousTitre = 'Toutes périodes confondues';
-      let slug = 'global';
+    let totalEncaisse = 0;
+    let totalEncaisseCredits = 0;
 
-      if (typePeriode === 'jour') {
-        const dateFormatee = formatDateCourte(`${dateJour}T12:00:00`);
-        titre = `Rapport du ${dateFormatee}`;
-        sousTitre = `Journée du ${dateFormatee}`;
-        slug = `jour_${dateJour}`;
-      } else if (typePeriode === 'mois') {
-        const moisLabel = libelleMoisAnnee(moisChoisi);
-        titre = `Rapport — ${moisLabel}`;
-        sousTitre = `Mois de ${moisLabel}`;
-        slug = `mois_${moisChoisi}`;
-      } else if (typePeriode === 'annee') {
-        titre = `Rapport annuel ${anneeChoisie}`;
-        sousTitre = `Année ${anneeChoisie}`;
-        slug = `annee_${anneeChoisie}`;
+    for (const v of ventes) {
+      if (!v.estCredit) {
+        if (correspondPeriode(v.date)) {
+          totalEncaisse += v.total;
+        }
+      } else if (v.paiementsCredit && v.paiementsCredit.length > 0) {
+        for (const p of v.paiementsCredit) {
+          if (correspondPeriode(p.date)) {
+            totalEncaisse += p.montant;
+            totalEncaisseCredits += p.montant;
+          }
+        }
+      } else if ((v.montantPaye ?? 0) > 0 && correspondPeriode(v.date)) {
+        const paye = Math.min(v.total, v.montantPaye ?? 0);
+        totalEncaisse += paye;
+        totalEncaisseCredits += paye;
       }
+    }
 
-      return {
-        ventesPeriode: vFiltrees,
-        depensesPeriode: dFiltrees,
-        titrePeriode: titre,
-        sousTitrePeriode: sousTitre,
-        slugPeriode: slug,
-      };
-    }, [ventes, depenses, typePeriode, dateJour, moisChoisi, anneeChoisie]);
+    let titre = 'Rapport global';
+    let sousTitre = 'Toutes périodes confondues';
+    let slug = 'global';
+
+    if (typePeriode === 'jour') {
+      const dateFormatee = formatDateCourte(`${dateJour}T12:00:00`);
+      titre = `Rapport du ${dateFormatee}`;
+      sousTitre = `Journée du ${dateFormatee}`;
+      slug = `jour_${dateJour}`;
+    } else if (typePeriode === 'mois') {
+      const moisLabel = libelleMoisAnnee(moisChoisi);
+      titre = `Rapport — ${moisLabel}`;
+      sousTitre = `Mois de ${moisLabel}`;
+      slug = `mois_${moisChoisi}`;
+    } else if (typePeriode === 'annee') {
+      titre = `Rapport annuel ${anneeChoisie}`;
+      sousTitre = `Année ${anneeChoisie}`;
+      slug = `annee_${anneeChoisie}`;
+    }
+
+    return {
+      ventesPeriode: vFiltrees,
+      depensesPeriode: dFiltrees,
+      encaissementsSurPeriode: totalEncaisse,
+      encaissementsCreditsPeriode: totalEncaisseCredits,
+      titrePeriode: titre,
+      sousTitrePeriode: sousTitre,
+      slugPeriode: slug,
+    };
+  }, [ventes, depenses, typePeriode, dateJour, moisChoisi, anneeChoisie]);
 
   const bilan = useMemo(() => {
     const chiffreAffairesFacture = ventesPeriode.reduce((acc, v) => acc + v.total, 0);
-    const chiffreAffaires = ventesPeriode.reduce(
-      (acc, v) => acc + (v.estCredit ? Math.min(v.total, v.montantPaye ?? 0) : v.total),
-      0
-    );
+    const chiffreAffaires = encaissementsSurPeriode;
     const creditsARecouvrer = ventesPeriode.reduce(
       (acc, v) => acc + (v.estCredit ? Math.max(0, v.total - (v.montantPaye ?? 0)) : 0),
       0
@@ -140,6 +168,7 @@ export default function RapportsPage({
     return {
       chiffreAffairesFacture,
       chiffreAffaires,
+      encaissementsCreditsPeriode,
       creditsARecouvrer,
       coutMarchandises,
       margeBrute,
@@ -149,7 +178,14 @@ export default function RapportsPage({
       parCategorie,
       maxValeur,
     };
-  }, [produits, categories, ventesPeriode, depensesPeriode]);
+  }, [
+    produits,
+    categories,
+    ventesPeriode,
+    depensesPeriode,
+    encaissementsSurPeriode,
+    encaissementsCreditsPeriode,
+  ]);
 
   const construireDonneesRapport = (): DonneesRapportPeriode => ({
     titrePeriode,
@@ -159,6 +195,7 @@ export default function RapportsPage({
     produits,
     chiffreAffairesFacture: bilan.chiffreAffairesFacture,
     chiffreAffairesEncaisse: bilan.chiffreAffaires,
+    encaissementsCreditsPeriode: bilan.encaissementsCreditsPeriode,
     creditsARecouvrer: bilan.creditsARecouvrer,
     coutMarchandises: bilan.coutMarchandises,
     margeBrute: bilan.margeBrute,
@@ -189,15 +226,15 @@ export default function RapportsPage({
   return (
     <div className="space-y-5">
       {/* Barre de filtrage par période + boutons Imprimer / PDF (masquée à l'impression) */}
-      <section className="no-print rounded-xl border border-slate-200 bg-white p-4">
+      <section className="no-print rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600">
-              <Calendar className="h-4 w-4 text-[#0A3072]" />
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400">
+              <Calendar className="h-4 w-4 text-[#0A3072] dark:text-blue-400" />
               Période :
             </span>
 
-            <div className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-0.5">
+            <div className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-0.5 dark:border-slate-700 dark:bg-slate-800">
               {(
                 [
                   { id: 'jour', label: 'Jour' },
@@ -210,10 +247,10 @@ export default function RapportsPage({
                   key={opt.id}
                   type="button"
                   onClick={() => setTypePeriode(opt.id)}
-                  className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  className={`h-7 rounded-md px-2.5 text-[11px] font-semibold transition-colors ${
                     typePeriode === opt.id
-                      ? 'bg-[#0A3072] text-white shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-[#0A3072] text-white shadow-sm dark:bg-blue-700'
+                      : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
                   }`}
                 >
                   {opt.label}
@@ -226,7 +263,7 @@ export default function RapportsPage({
                 type="date"
                 value={dateJour}
                 onChange={(e) => e.target.value && setDateJour(e.target.value)}
-                className="h-9 rounded-lg border border-slate-200 px-2.5 text-xs font-semibold text-slate-800 focus:border-blue-600 focus:outline-none"
+                className="h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-800 focus:border-blue-600 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 aria-label="Choisir la date du rapport"
               />
             )}
@@ -236,7 +273,7 @@ export default function RapportsPage({
                 type="month"
                 value={moisChoisi}
                 onChange={(e) => e.target.value && setMoisChoisi(e.target.value)}
-                className="h-9 rounded-lg border border-slate-200 px-2.5 text-xs font-semibold text-slate-800 focus:border-blue-600 focus:outline-none"
+                className="h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-800 focus:border-blue-600 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 aria-label="Choisir le mois du rapport"
               />
             )}
@@ -245,7 +282,7 @@ export default function RapportsPage({
               <select
                 value={anneeChoisie}
                 onChange={(e) => setAnneeChoisie(e.target.value)}
-                className="h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-800 focus:border-blue-600 focus:outline-none"
+                className="h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-800 focus:border-blue-600 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 aria-label="Choisir l'année du rapport"
               >
                 {anneesDisponibles.map((a) => (
@@ -261,25 +298,25 @@ export default function RapportsPage({
             <button
               type="button"
               onClick={gererPdf}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
             >
-              <Download className="h-4 w-4" />
+              <Download className="h-3.5 w-3.5" />
               Télécharger PDF
             </button>
             <button
               type="button"
               onClick={gererImpression}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#0A3072] px-4 text-xs font-semibold text-white hover:bg-blue-900"
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#0A3072] px-3 text-xs font-semibold text-white hover:bg-blue-900 dark:bg-blue-700 dark:hover:bg-blue-600"
             >
-              <Printer className="h-4 w-4" />
+              <Printer className="h-3.5 w-3.5" />
               Imprimer le rapport
             </button>
           </div>
         </div>
 
-        <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-2 text-xs text-slate-500">
+        <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-2 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
           <span>
-            Période affichée : <strong className="text-slate-800">{sousTitrePeriode}</strong>
+            Période affichée : <strong className="text-slate-800 dark:text-slate-200">{sousTitrePeriode}</strong>
           </span>
           <span>
             {ventesPeriode.length} vente(s) · {depensesPeriode.length} dépense(s)
@@ -287,7 +324,7 @@ export default function RapportsPage({
         </div>
 
         {infoImpression && (
-          <div className="mt-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-medium text-blue-800">
+          <div className="mt-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-medium text-blue-800 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-200">
             {infoImpression}
           </div>
         )}
@@ -322,14 +359,14 @@ export default function RapportsPage({
 
       {/* Indicateurs financiers */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 dark:border-slate-800 dark:bg-slate-900">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-medium text-slate-500">Chiffre d&apos;affaires</span>
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Chiffre d&apos;affaires</span>
             {peutSupprimerCA && ventes.length > 0 && (
               <button
                 type="button"
                 onClick={() => setModalSuppressionOuverte(true)}
-                className="no-print inline-flex items-center gap-1 rounded-lg bg-red-50 px-2 py-1 text-[11px] font-semibold text-red-700 hover:bg-red-100"
+                className="no-print inline-flex items-center gap-1 rounded-lg bg-red-50 px-2 py-1 text-[11px] font-semibold text-red-700 hover:bg-red-100 dark:bg-red-950/60 dark:text-red-300 dark:hover:bg-red-900/60"
                 title="Supprimer le chiffre d'affaires"
               >
                 <Trash2 className="h-3 w-3" />
@@ -337,30 +374,37 @@ export default function RapportsPage({
               </button>
             )}
           </div>
-          <div className="mt-2 font-mono text-xl font-bold text-slate-900 tabular-nums">
+          <div className="mt-2 font-mono text-xl font-bold text-slate-900 tabular-nums dark:text-slate-100">
             {formatPrix(bilan.chiffreAffaires, parametres.devise)}
           </div>
+          {bilan.encaissementsCreditsPeriode > 0 && (
+            <div className="mt-1 text-[11px] font-medium text-emerald-700 tabular-nums dark:text-emerald-400">
+              Dont {formatPrix(bilan.encaissementsCreditsPeriode, parametres.devise)} sur crédits
+            </div>
+          )}
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
-          <div className="text-xs font-medium text-slate-500">Marge brute sur ventes</div>
-          <div className="mt-2 font-mono text-xl font-bold text-blue-700 tabular-nums">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 dark:border-slate-800 dark:bg-slate-900">
+          <div className="text-xs font-medium text-slate-500 dark:text-slate-400">Marge brute sur ventes</div>
+          <div className="mt-2 font-mono text-xl font-bold text-blue-700 tabular-nums dark:text-blue-400">
             {formatPrix(bilan.margeBrute, parametres.devise)}
           </div>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
-          <div className="text-xs font-medium text-slate-500">Total des dépenses</div>
-          <div className="mt-2 font-mono text-xl font-bold text-amber-700 tabular-nums">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 dark:border-slate-800 dark:bg-slate-900">
+          <div className="text-xs font-medium text-slate-500 dark:text-slate-400">Total des dépenses</div>
+          <div className="mt-2 font-mono text-xl font-bold text-amber-700 tabular-nums dark:text-amber-400">
             {formatPrix(bilan.totalDepenses, parametres.devise)}
           </div>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
-          <div className="text-xs font-medium text-slate-500">Bénéfice net estimé</div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 dark:border-slate-800 dark:bg-slate-900">
+          <div className="text-xs font-medium text-slate-500 dark:text-slate-400">Bénéfice net estimé</div>
           <div
             className={`mt-2 font-mono text-xl font-bold tabular-nums ${
-              bilan.beneficeNet >= 0 ? 'text-emerald-700' : 'text-red-600'
+              bilan.beneficeNet >= 0
+                ? 'text-emerald-700 dark:text-emerald-400'
+                : 'text-red-600 dark:text-red-400'
             }`}
           >
             {formatPrix(bilan.beneficeNet, parametres.devise)}
@@ -370,68 +414,78 @@ export default function RapportsPage({
 
       {/* Détail comptable et répartition du stock par catégorie */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <section className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
-          <h2 className="mb-3 text-base font-bold text-slate-900">
+        <section className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 dark:border-slate-800 dark:bg-slate-900">
+          <h2 className="mb-3 text-base font-bold text-slate-900 dark:text-slate-100">
             Synthèse financière · {sousTitrePeriode}
           </h2>
-          <dl className="divide-y divide-slate-100 text-sm">
+          <dl className="divide-y divide-slate-100 text-sm dark:divide-slate-800">
             <div className="flex justify-between py-2.5">
-              <dt className="text-slate-600">Total facturé sur la période</dt>
-              <dd className="font-mono font-semibold text-slate-900 tabular-nums">
+              <dt className="text-slate-600 dark:text-slate-400">Ventes facturées sur la période</dt>
+              <dd className="font-mono font-semibold text-slate-900 tabular-nums dark:text-slate-100">
                 {formatPrix(bilan.chiffreAffairesFacture, parametres.devise)}
               </dd>
             </div>
             <div className="flex justify-between py-2.5">
-              <dt className="text-slate-600">Total des ventes encaissées</dt>
-              <dd className="font-mono font-semibold text-slate-900 tabular-nums">
+              <dt className="text-slate-600 dark:text-slate-400">
+                Encaissements reçus sur la période
+                {bilan.encaissementsCreditsPeriode > 0 && (
+                  <span className="block text-[11px] text-emerald-700 dark:text-emerald-400">
+                    Dont {formatPrix(bilan.encaissementsCreditsPeriode, parametres.devise)} de
+                    recouvrements / acomptes crédits
+                  </span>
+                )}
+              </dt>
+              <dd className="font-mono font-semibold text-slate-900 tabular-nums dark:text-slate-100">
                 {formatPrix(bilan.chiffreAffaires, parametres.devise)}
               </dd>
             </div>
             <div className="flex justify-between py-2.5">
-              <dt className="text-slate-600">Crédits clients à recouvrer</dt>
-              <dd className="font-mono font-semibold text-orange-600 tabular-nums">
+              <dt className="text-slate-600 dark:text-slate-400">Crédits clients à recouvrer (ventes période)</dt>
+              <dd className="font-mono font-semibold text-orange-600 tabular-nums dark:text-orange-400">
                 {formatPrix(bilan.creditsARecouvrer, parametres.devise)}
               </dd>
             </div>
             <div className="flex justify-between py-2.5">
-              <dt className="text-slate-600">Coût d&apos;achat des articles vendus</dt>
-              <dd className="font-mono font-semibold text-slate-900 tabular-nums">
+              <dt className="text-slate-600 dark:text-slate-400">Coût d&apos;achat des articles vendus</dt>
+              <dd className="font-mono font-semibold text-slate-900 tabular-nums dark:text-slate-100">
                 {formatPrix(bilan.coutMarchandises, parametres.devise)}
               </dd>
             </div>
             <div className="flex justify-between py-2.5">
-              <dt className="text-slate-600">Marge commerciale brute</dt>
-              <dd className="font-mono font-semibold text-blue-700 tabular-nums">
+              <dt className="text-slate-600 dark:text-slate-400">Marge commerciale brute</dt>
+              <dd className="font-mono font-semibold text-blue-700 tabular-nums dark:text-blue-400">
                 {formatPrix(bilan.margeBrute, parametres.devise)}
               </dd>
             </div>
             <div className="flex justify-between py-2.5">
-              <dt className="text-slate-600">Charges / Dépenses de la boutique</dt>
-              <dd className="font-mono font-semibold text-amber-700 tabular-nums">
+              <dt className="text-slate-600 dark:text-slate-400">Charges / Dépenses de la boutique</dt>
+              <dd className="font-mono font-semibold text-amber-700 tabular-nums dark:text-amber-400">
                 {formatPrix(bilan.totalDepenses, parametres.devise)}
               </dd>
             </div>
             <div className="flex justify-between py-2.5">
-              <dt className="font-semibold text-slate-900">Résultat net (Marge - Dépenses)</dt>
+              <dt className="font-semibold text-slate-900 dark:text-slate-100">Résultat net (Marge - Dépenses)</dt>
               <dd
                 className={`font-mono font-bold tabular-nums ${
-                  bilan.beneficeNet >= 0 ? 'text-emerald-700' : 'text-red-600'
+                  bilan.beneficeNet >= 0
+                    ? 'text-emerald-700 dark:text-emerald-400'
+                    : 'text-red-600 dark:text-red-400'
                 }`}
               >
                 {formatPrix(bilan.beneficeNet, parametres.devise)}
               </dd>
             </div>
             <div className="flex justify-between py-2.5">
-              <dt className="text-slate-600">Valeur potentielle du stock à la vente</dt>
-              <dd className="font-mono font-semibold text-slate-900 tabular-nums">
+              <dt className="text-slate-600 dark:text-slate-400">Valeur potentielle du stock à la vente</dt>
+              <dd className="font-mono font-semibold text-slate-900 tabular-nums dark:text-slate-100">
                 {formatPrix(bilan.valeurStockVente, parametres.devise)}
               </dd>
             </div>
           </dl>
         </section>
 
-        <section className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
-          <h2 className="mb-3 text-base font-bold text-slate-900">
+        <section className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 dark:border-slate-800 dark:bg-slate-900">
+          <h2 className="mb-3 text-base font-bold text-slate-900 dark:text-slate-100">
             Valeur du stock par catégorie
           </h2>
           <div className="space-y-3.5">
@@ -440,16 +494,16 @@ export default function RapportsPage({
               return (
                 <div key={cat.id} className="space-y-1">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-800">
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">
                       {cat.nom} ({cat.nbProduits} réf. · {cat.unites} unités)
                     </span>
-                    <span className="font-mono font-semibold text-slate-900 tabular-nums">
+                    <span className="font-mono font-semibold text-slate-900 tabular-nums dark:text-slate-100">
                       {formatPrix(cat.valeur, parametres.devise)}
                     </span>
                   </div>
-                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
+                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                     <div
-                      className="h-full rounded-full bg-blue-600"
+                      className="h-full rounded-full bg-blue-600 dark:bg-blue-500"
                       style={{ width: `${pourcentage}%` }}
                     />
                   </div>
@@ -462,45 +516,45 @@ export default function RapportsPage({
 
       {/* Détail des ventes et dépenses de la période sélectionnée */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-          <div className="flex items-center justify-between border-b border-slate-200 px-4 py-2.5">
-            <h2 className="text-sm font-bold text-slate-900">
+        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex items-center justify-between border-b border-slate-200 px-4 py-2.5 dark:border-slate-800">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
               Ventes de la période ({ventesPeriode.length})
             </h2>
-            <span className="font-mono text-xs font-bold text-[#0A3072] tabular-nums">
+            <span className="font-mono text-xs font-bold text-[#0A3072] tabular-nums dark:text-blue-400">
               {formatPrix(bilan.chiffreAffaires, parametres.devise)}
             </span>
           </div>
           {ventesPeriode.length === 0 ? (
-            <p className="px-4 py-6 text-center text-xs text-slate-500">
+            <p className="px-4 py-6 text-center text-xs text-slate-500 dark:text-slate-400">
               Aucune vente enregistrée pour cette période.
             </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left text-xs">
                 <thead>
-                  <tr className="bg-[#0D357A] text-white">
+                  <tr className="bg-[#0D357A] text-white dark:bg-slate-800 dark:text-slate-100">
                     <th className="px-3 py-2">Facture</th>
                     <th className="px-3 py-2">Date</th>
                     <th className="px-3 py-2">Client</th>
                     <th className="px-3 py-2 text-right">Encaissé</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {ventesPeriode.map((v) => {
                     const encaisse = v.estCredit
                       ? Math.min(v.total, v.montantPaye ?? 0)
                       : v.total;
                     return (
-                      <tr key={v.id} className="hover:bg-slate-50">
-                        <td className="px-3 py-2 font-mono font-semibold text-slate-900">
+                      <tr key={v.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                        <td className="px-3 py-2 font-mono font-semibold text-slate-900 dark:text-slate-100">
                           {v.numeroFacture}
                         </td>
-                        <td className="whitespace-nowrap px-3 py-2 text-slate-600">
+                        <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-400">
                           {formatDateCourte(v.date)}
                         </td>
-                        <td className="px-3 py-2 text-slate-700">{v.clientNom}</td>
-                        <td className="whitespace-nowrap px-3 py-2 text-right font-mono font-bold text-slate-900 tabular-nums">
+                        <td className="px-3 py-2 text-slate-700 dark:text-slate-300">{v.clientNom}</td>
+                        <td className="whitespace-nowrap px-3 py-2 text-right font-mono font-bold text-slate-900 tabular-nums dark:text-slate-100">
                           {formatPrix(encaisse, parametres.devise)}
                         </td>
                       </tr>
@@ -512,39 +566,39 @@ export default function RapportsPage({
           )}
         </section>
 
-        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-          <div className="flex items-center justify-between border-b border-slate-200 px-4 py-2.5">
-            <h2 className="text-sm font-bold text-slate-900">
+        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex items-center justify-between border-b border-slate-200 px-4 py-2.5 dark:border-slate-800">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
               Dépenses de la période ({depensesPeriode.length})
             </h2>
-            <span className="font-mono text-xs font-bold text-amber-700 tabular-nums">
+            <span className="font-mono text-xs font-bold text-amber-700 tabular-nums dark:text-amber-400">
               {formatPrix(bilan.totalDepenses, parametres.devise)}
             </span>
           </div>
           {depensesPeriode.length === 0 ? (
-            <p className="px-4 py-6 text-center text-xs text-slate-500">
+            <p className="px-4 py-6 text-center text-xs text-slate-500 dark:text-slate-400">
               Aucune dépense enregistrée pour cette période.
             </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left text-xs">
                 <thead>
-                  <tr className="bg-[#0D357A] text-white">
+                  <tr className="bg-[#0D357A] text-white dark:bg-slate-800 dark:text-slate-100">
                     <th className="px-3 py-2">Date</th>
                     <th className="px-3 py-2">Libellé</th>
                     <th className="px-3 py-2">Catégorie</th>
                     <th className="px-3 py-2 text-right">Montant</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {depensesPeriode.map((d) => (
-                    <tr key={d.id} className="hover:bg-slate-50">
-                      <td className="whitespace-nowrap px-3 py-2 text-slate-600">
+                    <tr key={d.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                      <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-400">
                         {formatDateCourte(d.date)}
                       </td>
-                      <td className="px-3 py-2 font-semibold text-slate-900">{d.libelle}</td>
-                      <td className="px-3 py-2 text-slate-600">{d.categorie}</td>
-                      <td className="whitespace-nowrap px-3 py-2 text-right font-mono font-bold text-slate-900 tabular-nums">
+                      <td className="px-3 py-2 font-semibold text-slate-900 dark:text-slate-100">{d.libelle}</td>
+                      <td className="px-3 py-2 text-slate-600 dark:text-slate-400">{d.categorie}</td>
+                      <td className="whitespace-nowrap px-3 py-2 text-right font-mono font-bold text-slate-900 tabular-nums dark:text-slate-100">
                         {formatPrix(d.montant, parametres.devise)}
                       </td>
                     </tr>
@@ -559,6 +613,7 @@ export default function RapportsPage({
       <ModalSuppressionCA
         ouvert={modalSuppressionOuverte}
         role={role}
+        codeMaitreAdmin={parametres.codeMaitreAdmin}
         titre="Supprimer le chiffre d'affaires ?"
         description="Cette action supprime toutes les factures de ventes enregistrées et remet le chiffre d'affaires à 0."
         onFermer={() => setModalSuppressionOuverte(false)}

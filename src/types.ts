@@ -114,9 +114,13 @@ export interface Vente {
   clientTelephone?: string;
   modePaiement: ModePaiement;
   lignes: LigneVente[];
+  sousTotalBrut?: number;
+  remise?: number;
   total: number;
+  vendeur?: string;
   estCredit?: boolean;
   montantPaye?: number;
+  dateEcheanceCredit?: string;
   paiementsCredit?: PaiementCredit[];
 }
 
@@ -142,6 +146,18 @@ export interface Depense {
   categorie: 'Loyer' | 'Electricite' | 'Transport' | 'Salaires' | 'Autre';
   montant: number;
   date: string;
+  utilisateur?: string;
+}
+
+/**
+ * Fond de caisse initial ou apport manuel de trésorerie.
+ */
+export interface ApportCaisse {
+  id: string;
+  libelle: string;
+  montant: number;
+  date: string;
+  utilisateur?: string;
 }
 
 /**
@@ -152,6 +168,10 @@ export type DesignFactureA4 =
   | 'moderne_emeraude'
   | 'prestige_noir'
   | 'minimal_epure';
+
+export type ModeLimiteCredit = 'par_client' | 'globale';
+
+export type ThemeApparence = 'clair' | 'sombre';
 
 /**
  * Informations générales de la boutique affichées dans l'interface et sur les reçus.
@@ -167,6 +187,10 @@ export interface ParametresBoutique {
   logoDataUrl?: string;
   piedFacture?: string;
   designFactureA4?: DesignFactureA4;
+  limiteCredit?: number;
+  modeLimiteCredit?: ModeLimiteCredit;
+  codeMaitreAdmin?: string;
+  theme?: ThemeApparence;
 }
 
 /**
@@ -178,6 +202,7 @@ export interface BaseDonnees {
   ventes: Vente[];
   mouvementsStock: MouvementStock[];
   depenses: Depense[];
+  apportsCaisse?: ApportCaisse[];
   utilisateurs: Utilisateur[];
   parametres: ParametresBoutique;
 }

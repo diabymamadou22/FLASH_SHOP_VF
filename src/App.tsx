@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Header from './components/Header';
 import MobileBottomNav from './components/MobileBottomNav';
 import Sidebar from './components/Sidebar';
+import { useToast } from './context/ToastContext';
 import CategoriesPage from './pages/CategoriesPage';
 import ConnexionPage from './pages/ConnexionPage';
 import CreditsPage from './pages/CreditsPage';
@@ -27,8 +28,10 @@ import {
   sauvegarderBase,
   verifierRestaurationLocale,
 } from './services/database';
+import { verifierDepenseAutorisee } from './services/depenses';
 import { prechargerLogoPdf } from './services/logoPdf';
 import {
+  ApportCaisse,
   BaseDonnees,
   Categorie,
   Depense,
@@ -38,12 +41,14 @@ import {
   ParametresBoutique,
   Produit,
   SessionUtilisateur,
+  ThemeApparence,
   Utilisateur,
   Vente,
 } from './types';
-import { getStatutStock } from './utils/format';
+import { formatPrix, genererId, getStatutStock } from './utils/format';
 
 export default function App() {
+  const toast = useToast();
   // Chargement initial de la base locale et de la session
   const [donnees, setDonnees] = useState<BaseDonnees>(() => chargerBase());
   const [session, setSession] = useState<SessionUtilisateur | null>(() => chargerSession());
@@ -78,6 +83,16 @@ export default function App() {
     void prechargerLogoPdf(donnees.parametres.logoDataUrl);
   }, [donnees.parametres.logoDataUrl]);
 
+  // Synchronise la classe .dark sur <html> et la couleur système selon les paramètres
+  useEffect(() => {
+    const estSombre = donnees.parametres.theme === 'sombre';
+    document.documentElement.classList.toggle('dark', estSombre);
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) {
+      metaTheme.setAttribute('content', estSombre ? '#0f172a' : '#0A3072');
+    }
+  }, [donnees.parametres.theme]);
+
   // Liste des produits ayant atteint ou dépassé leur seuil minimal
   const produitsEnAlerte = useMemo(
     () => donnees.produits.filter((p) => getStatutStock(p.stock, p.seuil) !== 'en_stock'),
@@ -89,23 +104,30 @@ export default function App() {
     const nouvelleSession = authentifierUtilisateur(
       nomUtilisateur,
       motDePasse,
-      donnees.utilisateurs
+      donnees.utilisateurs,
+      donnees.parametres.codeMaitreAdmin
     );
-    if (!nouvelleSession) return false;
+    if (!nouvelleSession) {
+      toast.erreur('Connexion refusée', "Nom d'utilisateur ou mot de passe incorrect.");
+      return false;
+    }
     setSession(nouvelleSession);
     setPageActive(getPageDefautRole(nouvelleSession.role));
+    toast.succes('Connexion réussie', `Bienvenue, ${nouvelleSession.nom}.`);
     return true;
   };
 
   const gererDeconnexion = () => {
     setSession(null);
     setMenuMobileOuvert(false);
+    toast.info('Session fermée', 'Vous êtes déconnecté.');
   };
 
   const changerPage = (page: PageId) => {
     if (!session) return;
     if (peutAccederPage(session.role, page)) {
       setPageActive(page);
+      window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
     }
   };
 
@@ -115,6 +137,7 @@ export default function App() {
       ...prev,
       produits: [produit, ...prev.produits],
     }));
+    toast.succes('Produit ajouté', `${produit.nom} (${produit.reference}) ajouté au catalogue.`);
   };
 
   const modifierProduit = (produitModifie: Produit) => {
@@ -122,13 +145,19 @@ export default function App() {
       ...prev,
       produits: prev.produits.map((p) => (p.id === produitModifie.id ? produitModifie : p)),
     }));
+    toast.succes('Produit mis à jour', `${produitModifie.nom} a été enregistré.`);
   };
 
   const supprimerProduit = (id: string) => {
+    const cible = donnees.produits.find((p) => p.id === id);
     setDonnees((prev) => ({
       ...prev,
       produits: prev.produits.filter((p) => p.id !== id),
     }));
+    toast.succes(
+      'Produit supprimé',
+      cible ? `${cible.nom} a été retiré du catalogue.` : 'Produit supprimé.'
+    );
   };
 
   // --- Opérations CRUD Catégories ---
@@ -137,6 +166,7 @@ export default function App() {
       ...prev,
       categories: [...prev.categories, categorie],
     }));
+    toast.succes('Catégorie ajoutée', `"${categorie.nom}" créée avec succès.`);
   };
 
   const modifierCategorie = (categorieModifiee: Categorie) => {
@@ -146,13 +176,19 @@ export default function App() {
         c.id === categorieModifiee.id ? categorieModifiee : c
       ),
     }));
+    toast.succes('Catégorie mise à jour', `"${categorieModifiee.nom}" enregistrée.`);
   };
 
   const supprimerCategorie = (id: string) => {
+    const cible = donnees.categories.find((c) => c.id === id);
     setDonnees((prev) => ({
       ...prev,
       categories: prev.categories.filter((c) => c.id !== id),
     }));
+    toast.succes(
+      'Catégorie supprimée',
+      cible ? `"${cible.nom}" a été supprimée.` : 'Catégorie supprimée.'
+    );
   };
 
   // --- Ventes & Suppression du Chiffre d'affaires ---
@@ -173,13 +209,56 @@ export default function App() {
         ventes: [vente, ...prev.ventes],
       };
     });
+    const montantFormate = formatPrix(vente.total, donnees.parametres.devise);
+    toast.succes(
+      vente.estCredit ? 'Vente à crédit enregistrée' : 'Vente validée',
+      `${vente.numeroFacture} · ${vente.clientNom} (${montantFormate})`
+    );
   };
 
   const supprimerVente = (id: string) => {
-    setDonnees((prev) => ({
-      ...prev,
-      ventes: prev.ventes.filter((v) => v.id !== id),
-    }));
+    const cible = donnees.ventes.find((v) => v.id === id);
+    setDonnees((prev) => {
+      const venteASupprimer = prev.ventes.find((v) => v.id === id);
+      if (!venteASupprimer) return prev;
+
+      const quantitesParProduit = new Map<string, number>();
+      for (const ligne of venteASupprimer.lignes) {
+        quantitesParProduit.set(
+          ligne.produitId,
+          (quantitesParProduit.get(ligne.produitId) ?? 0) + ligne.quantite
+        );
+      }
+
+      const produitsRestaures = prev.produits.map((p) => {
+        const qte = quantitesParProduit.get(p.id);
+        return qte ? { ...p, stock: p.stock + qte } : p;
+      });
+
+      const maintenant = new Date().toISOString();
+      const mouvementsRetour: MouvementStock[] = venteASupprimer.lignes.map((ligne) => ({
+        id: genererId('mvt'),
+        produitId: ligne.produitId,
+        nomProduit: ligne.nomProduit,
+        type: 'entree',
+        quantite: ligne.quantite,
+        motif: `Annulation facture ${venteASupprimer.numeroFacture}`,
+        date: maintenant,
+      }));
+
+      return {
+        ...prev,
+        produits: produitsRestaures,
+        ventes: prev.ventes.filter((v) => v.id !== id),
+        mouvementsStock: [...mouvementsRetour, ...prev.mouvementsStock],
+      };
+    });
+    toast.succes(
+      'Facture annulée',
+      cible
+        ? `${cible.numeroFacture} supprimée et stock restauré.`
+        : 'Facture supprimée et stock restauré.'
+    );
   };
 
   const supprimerChiffreAffaires = () => {
@@ -187,9 +266,11 @@ export default function App() {
       ...prev,
       ventes: [],
     }));
+    toast.succes("Chiffre d'affaires réinitialisé", 'Toutes les factures ont été supprimées.');
   };
 
   const enregistrerPaiementCredit = (venteId: string, paiement: PaiementCredit) => {
+    const cible = donnees.ventes.find((v) => v.id === venteId);
     setDonnees((prev) => ({
       ...prev,
       ventes: prev.ventes.map((v) => {
@@ -203,6 +284,32 @@ export default function App() {
         };
       }),
     }));
+    toast.succes(
+      'Versement encaissé',
+      `${formatPrix(paiement.montant, donnees.parametres.devise)}${
+        cible ? ` reçu de ${cible.clientNom}` : ''
+      }.`
+    );
+  };
+
+  const modifierEcheanceCredit = (venteId: string, nouvelleDate?: string) => {
+    setDonnees((prev) => ({
+      ...prev,
+      ventes: prev.ventes.map((v) =>
+        v.id === venteId
+          ? {
+              ...v,
+              dateEcheanceCredit: nouvelleDate?.trim() || undefined,
+            }
+          : v
+      ),
+    }));
+    toast.succes(
+      'Échéance mise à jour',
+      nouvelleDate?.trim()
+        ? 'Nouvelle date de paiement enregistrée.'
+        : "Date d'échéance retirée."
+    );
   };
 
   // --- Mouvement de stock manuel (entrée ou sortie) ---
@@ -223,21 +330,77 @@ export default function App() {
         mouvementsStock: [mouvement, ...prev.mouvementsStock],
       };
     });
+    toast.succes(
+      mouvement.type === 'entree' ? 'Entrée de stock enregistrée' : 'Sortie de stock enregistrée',
+      `${mouvement.nomProduit} (${mouvement.type === 'entree' ? '+' : '-'}${mouvement.quantite}).`
+    );
   };
 
-  // --- Dépenses ---
+  // --- Dépenses & Apports de caisse ---
   const ajouterDepense = (depense: Depense) => {
-    setDonnees((prev) => ({
-      ...prev,
-      depenses: [depense, ...prev.depenses],
-    }));
+    const verif = verifierDepenseAutorisee(
+      depense.montant,
+      donnees.ventes,
+      donnees.depenses,
+      donnees.parametres.devise,
+      donnees.apportsCaisse ?? []
+    );
+    if (!verif.autorise) {
+      toast.erreur('Dépense refusée', verif.erreur ?? 'Solde disponible insuffisant.');
+      return;
+    }
+    setDonnees((prev) => {
+      const recheck = verifierDepenseAutorisee(
+        depense.montant,
+        prev.ventes,
+        prev.depenses,
+        prev.parametres.devise,
+        prev.apportsCaisse ?? []
+      );
+      if (!recheck.autorise) return prev;
+      return {
+        ...prev,
+        depenses: [depense, ...prev.depenses],
+      };
+    });
+    toast.succes(
+      'Dépense enregistrée',
+      `${depense.libelle} · ${formatPrix(depense.montant, donnees.parametres.devise)}`
+    );
   };
 
   const supprimerDepense = (id: string) => {
+    const cible = donnees.depenses.find((d) => d.id === id);
     setDonnees((prev) => ({
       ...prev,
       depenses: prev.depenses.filter((d) => d.id !== id),
     }));
+    toast.succes('Dépense supprimée', cible ? `"${cible.libelle}" supprimée.` : undefined);
+  };
+
+  const ajouterApportCaisse = (apport: ApportCaisse) => {
+    setDonnees((prev) => ({
+      ...prev,
+      apportsCaisse: [apport, ...(prev.apportsCaisse ?? [])],
+    }));
+    toast.succes(
+      'Apport en caisse ajouté',
+      `${apport.libelle} · ${formatPrix(apport.montant, donnees.parametres.devise)}`
+    );
+  };
+
+  const supprimerApportCaisse = (id: string) => {
+    const cible = (donnees.apportsCaisse ?? []).find((a) => a.id === id);
+    setDonnees((prev) => ({
+      ...prev,
+      apportsCaisse: (prev.apportsCaisse ?? []).filter((a) => a.id !== id),
+    }));
+    toast.succes('Apport supprimé', cible ? `"${cible.libelle}" supprimé.` : undefined);
+  };
+
+  const restaurerBase = (nouvelleBase: BaseDonnees) => {
+    setDonnees(nouvelleBase);
+    toast.succes('Sauvegarde restaurée', 'Les données de la boutique ont été restaurées.');
   };
 
   // --- Utilisateurs & Paramètres ---
@@ -246,6 +409,7 @@ export default function App() {
       ...prev,
       utilisateurs: [...prev.utilisateurs, utilisateur],
     }));
+    toast.succes('Utilisateur créé', `Compte "@${utilisateur.nomUtilisateur || utilisateur.nom}" ajouté.`);
   };
 
   const modifierUtilisateur = (utilisateurModifie: Utilisateur) => {
@@ -265,13 +429,22 @@ export default function App() {
           }
         : prev
     );
+    toast.succes(
+      'Utilisateur mis à jour',
+      `Compte "@${utilisateurModifie.nomUtilisateur || utilisateurModifie.nom}" modifié.`
+    );
   };
 
   const supprimerUtilisateur = (id: string) => {
+    const cible = donnees.utilisateurs.find((u) => u.id === id);
     setDonnees((prev) => ({
       ...prev,
       utilisateurs: prev.utilisateurs.filter((u) => u.id !== id),
     }));
+    toast.succes(
+      'Utilisateur supprimé',
+      cible ? `Compte "@${cible.nomUtilisateur || cible.nom}" supprimé.` : undefined
+    );
   };
 
   const sauvegarderParametres = (parametres: ParametresBoutique) => {
@@ -279,6 +452,22 @@ export default function App() {
       ...prev,
       parametres,
     }));
+  };
+
+  const changerTheme = (nouveauTheme: ThemeApparence) => {
+    const themeActuel = donnees.parametres.theme ?? 'clair';
+    if (themeActuel === nouveauTheme) return;
+    setDonnees((prev) => ({
+      ...prev,
+      parametres: {
+        ...prev.parametres,
+        theme: nouveauTheme,
+      },
+    }));
+    toast.succes(
+      nouveauTheme === 'sombre' ? 'Thème sombre activé' : 'Thème clair activé',
+      'Préférence enregistrée.'
+    );
   };
 
   // Écran de connexion si aucune session n'est active
@@ -291,12 +480,14 @@ export default function App() {
     : getPageDefautRole(session.role);
 
   return (
-    <div className="flex min-h-[100dvh] w-full overflow-x-hidden bg-slate-50 text-slate-900">
+    <div className="flex min-h-[100dvh] w-full overflow-x-clip bg-slate-50 text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100">
       <Sidebar
         pageActive={pageCourante}
         role={session.role}
         onChangerPage={changerPage}
         parametres={donnees.parametres}
+        theme={donnees.parametres.theme ?? 'clair'}
+        onChangerTheme={changerTheme}
         ouvertMobile={menuMobileOuvert}
         onFermerMobile={() => setMenuMobileOuvert(false)}
       />
@@ -345,8 +536,10 @@ export default function App() {
           {pageCourante === 'caisse' && (
             <VentesCaissePage
               produits={donnees.produits}
+              ventes={donnees.ventes}
               parametres={donnees.parametres}
               nombreVentesExistantes={donnees.ventes.length}
+              vendeurNom={session.nomUtilisateur || session.nom}
               onValiderVente={validerVente}
             />
           )}
@@ -357,7 +550,9 @@ export default function App() {
               parametres={donnees.parametres}
               role={session.role}
               onEnregistrerPaiementCredit={enregistrerPaiementCredit}
+              onModifierEcheanceCredit={modifierEcheanceCredit}
               onSupprimerVente={supprimerVente}
+              onSauvegarderParametres={sauvegarderParametres}
             />
           )}
 
@@ -382,9 +577,14 @@ export default function App() {
           {pageCourante === 'depenses' && (
             <DepensesPage
               depenses={donnees.depenses}
+              apportsCaisse={donnees.apportsCaisse ?? []}
+              ventes={donnees.ventes}
               devise={donnees.parametres.devise}
+              utilisateurNom={session.nomUtilisateur || session.nom}
               onAjouterDepense={ajouterDepense}
               onSupprimerDepense={supprimerDepense}
+              onAjouterApportCaisse={ajouterApportCaisse}
+              onSupprimerApportCaisse={supprimerApportCaisse}
             />
           )}
 
@@ -400,6 +600,7 @@ export default function App() {
             <UtilisateursPage
               utilisateurs={donnees.utilisateurs}
               utilisateurConnecteId={session.id}
+              codeMaitreAdmin={donnees.parametres.codeMaitreAdmin}
               onAjouterUtilisateur={ajouterUtilisateur}
               onModifierUtilisateur={modifierUtilisateur}
               onSupprimerUtilisateur={supprimerUtilisateur}
@@ -411,6 +612,7 @@ export default function App() {
             <ParametresPage
               donnees={donnees}
               onSauvegarderParametres={sauvegarderParametres}
+              onRestaurerBase={restaurerBase}
               onAllerUtilisateurs={() => changerPage('utilisateurs')}
             />
           )}

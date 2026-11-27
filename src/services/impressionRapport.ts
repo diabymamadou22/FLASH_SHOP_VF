@@ -18,6 +18,7 @@ export interface DonneesRapportPeriode {
   produits: Produit[];
   chiffreAffairesFacture: number;
   chiffreAffairesEncaisse: number;
+  encaissementsCreditsPeriode?: number;
   creditsARecouvrer: number;
   coutMarchandises: number;
   margeBrute: number;
@@ -87,8 +88,16 @@ function creerPdfRapport(rapport: DonneesRapportPeriode, logo: LogoPdfResolu | n
   const lignesSynthese: [string, string][] = [
     ['Nombre de ventes sur la période', String(rapport.ventes.length)],
     ["Chiffre d'affaires total facturé", formatPrix(rapport.chiffreAffairesFacture, devise)],
-    ["Chiffre d'affaires encaissé", formatPrix(rapport.chiffreAffairesEncaisse, devise)],
-    ['Crédits clients à recouvrer', formatPrix(rapport.creditsARecouvrer, devise)],
+    [
+      rapport.encaissementsCreditsPeriode && rapport.encaissementsCreditsPeriode > 0
+        ? `Encaissements reçus (dont crédits : ${formatPrix(
+            rapport.encaissementsCreditsPeriode,
+            devise
+          )})`
+        : 'Encaissements reçus sur la période',
+      formatPrix(rapport.chiffreAffairesEncaisse, devise),
+    ],
+    ['Crédits clients à recouvrer (ventes période)', formatPrix(rapport.creditsARecouvrer, devise)],
     ["Coût d'achat des articles vendus", formatPrix(rapport.coutMarchandises, devise)],
     ['Marge commerciale brute', formatPrix(rapport.margeBrute, devise)],
     [`Dépenses enregistrées (${rapport.depenses.length})`, formatPrix(rapport.totalDepenses, devise)],

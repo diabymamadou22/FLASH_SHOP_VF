@@ -11,6 +11,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
 import { LIBELLES_ROLE, validerUtilisateurForm } from '../services/auth';
 import { RoleAssignable, Utilisateur } from '../types';
 import { genererId } from '../utils/format';
@@ -18,6 +19,7 @@ import { genererId } from '../utils/format';
 interface UtilisateursPageProps {
   utilisateurs: Utilisateur[];
   utilisateurConnecteId: string;
+  codeMaitreAdmin?: string;
   onAjouterUtilisateur: (utilisateur: Utilisateur) => void;
   onModifierUtilisateur: (utilisateur: Utilisateur) => void;
   onSupprimerUtilisateur: (id: string) => void;
@@ -27,11 +29,13 @@ interface UtilisateursPageProps {
 export default function UtilisateursPage({
   utilisateurs,
   utilisateurConnecteId,
+  codeMaitreAdmin,
   onAjouterUtilisateur,
   onModifierUtilisateur,
   onSupprimerUtilisateur,
   onRetourParametres,
 }: UtilisateursPageProps) {
+  const toast = useToast();
   const [nomUtilisateurUser, setNomUtilisateurUser] = useState('');
   const [motDePasseUser, setMotDePasseUser] = useState('');
   const [afficherMdpForm, setAfficherMdpForm] = useState(false);
@@ -75,11 +79,14 @@ export default function UtilisateursPage({
       nomUtilisateurUser,
       motDePasseUser,
       utilisateurs,
-      userEnEdition?.id
+      userEnEdition?.id,
+      codeMaitreAdmin
     );
 
     if (!validation.valide || !validation.nomUtilisateurPropre || !validation.motDePassePropre) {
-      setErreurUser(validation.erreur ?? 'Données invalides.');
+      const msg = validation.erreur ?? 'Données invalides.';
+      setErreurUser(msg);
+      toast.erreur('Enregistrement impossible', msg);
       return;
     }
 
@@ -113,7 +120,9 @@ export default function UtilisateursPage({
 
   const tenterSuppressionUser = (u: Utilisateur) => {
     if (u.id === utilisateurConnecteId) {
-      setErreurUser('Vous ne pouvez pas supprimer votre propre compte actif.');
+      const msg = 'Vous ne pouvez pas supprimer votre propre compte actif.';
+      setErreurUser(msg);
+      toast.erreur('Action refusée', msg);
       return;
     }
     setErreurUser('');
@@ -130,26 +139,26 @@ export default function UtilisateursPage({
         <button
           type="button"
           onClick={onRetourParametres}
-          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 sm:text-sm"
+          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
         >
-          <ArrowLeft className="h-4 w-4 shrink-0" />
+          <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
           <span>Retour aux paramètres</span>
         </button>
       </div>
 
       {messageSucces && (
-        <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3.5 py-2 text-xs font-semibold text-emerald-700">
+        <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3.5 py-2 text-xs font-semibold text-emerald-700 dark:border-emerald-800/70 dark:bg-emerald-950/40 dark:text-emerald-300">
           <CheckCircle2 className="h-4 w-4 shrink-0" />
           {messageSucces}
         </div>
       )}
 
       {/* Formulaire de création / modification des utilisateurs */}
-      <section className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+      <section className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 sm:p-5">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5 dark:border-slate-800">
           <div className="flex items-center gap-2">
-            <UserPlus className="h-4 w-4 text-[#0A3072]" />
-            <h2 className="text-sm font-bold text-slate-900 sm:text-base">
+            <UserPlus className="h-4 w-4 text-[#0A3072] dark:text-blue-400" />
+            <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 sm:text-base">
               Gestion des utilisateurs et rôles
             </h2>
           </div>
@@ -157,7 +166,7 @@ export default function UtilisateursPage({
             <button
               type="button"
               onClick={reinitialiserFormUser}
-              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
             >
               <X className="h-3.5 w-3.5" />
               Annuler l&apos;édition
@@ -167,14 +176,14 @@ export default function UtilisateursPage({
 
         <form onSubmit={soumettreUtilisateur} className="space-y-3">
           {userEnEdition && (
-            <div className="flex items-center justify-between rounded-lg bg-blue-50 px-3 py-1.5">
-              <span className="text-xs font-semibold text-blue-800">
+            <div className="flex items-center justify-between rounded-lg bg-blue-50 px-3 py-1.5 dark:bg-blue-950/40">
+              <span className="text-xs font-semibold text-blue-800 dark:text-blue-300">
                 Modification de : @{userEnEdition.nomUtilisateur || userEnEdition.nom}
               </span>
               <button
                 type="button"
                 onClick={reinitialiserFormUser}
-                className="rounded-md p-1 text-blue-600 hover:bg-blue-100"
+                className="rounded-md p-1 text-blue-600 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-900/50"
                 aria-label="Annuler la modification"
               >
                 <X className="h-3.5 w-3.5" />
@@ -183,7 +192,7 @@ export default function UtilisateursPage({
           )}
 
           {erreurUser && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
+            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700 dark:border-red-800/70 dark:bg-red-950/40 dark:text-red-300">
               {erreurUser}
             </div>
           )}
@@ -192,7 +201,7 @@ export default function UtilisateursPage({
             <div>
               <label
                 htmlFor="user-nom"
-                className="mb-1 block text-xs font-semibold text-slate-700"
+                className="mb-1 block text-xs font-semibold text-slate-700 dark:text-slate-300"
               >
                 Nom d&apos;utilisateur *
               </label>
@@ -203,14 +212,14 @@ export default function UtilisateursPage({
                 value={nomUtilisateurUser}
                 onChange={(e) => setNomUtilisateurUser(e.target.value)}
                 placeholder="Ex: ibrahim.compta"
-                className="h-9 w-full rounded-lg border border-slate-200 px-2.5 text-sm focus:border-blue-600 focus:outline-none"
+                className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
               />
             </div>
 
             <div>
               <label
                 htmlFor="user-role"
-                className="mb-1 block text-xs font-semibold text-slate-700"
+                className="mb-1 block text-xs font-semibold text-slate-700 dark:text-slate-300"
               >
                 Rôle *
               </label>
@@ -218,7 +227,7 @@ export default function UtilisateursPage({
                 id="user-role"
                 value={roleUser}
                 onChange={(e) => setRoleUser(e.target.value as RoleAssignable)}
-                className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-sm focus:border-blue-600 focus:outline-none"
+                className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-sm text-slate-900 focus:border-blue-600 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               >
                 <option value="admin">Administrateur</option>
                 <option value="comptable">Comptable</option>
@@ -229,7 +238,7 @@ export default function UtilisateursPage({
             <div>
               <label
                 htmlFor="user-mdp"
-                className="mb-1 block text-xs font-semibold text-slate-700"
+                className="mb-1 block text-xs font-semibold text-slate-700 dark:text-slate-300"
               >
                 Mot de passe *
               </label>
@@ -241,12 +250,12 @@ export default function UtilisateursPage({
                   value={motDePasseUser}
                   onChange={(e) => setMotDePasseUser(e.target.value)}
                   placeholder="Mot de passe unique"
-                  className="h-9 w-full rounded-lg border border-slate-200 pl-2.5 pr-8 text-sm focus:border-blue-600 focus:outline-none"
+                  className="h-9 w-full rounded-lg border border-slate-200 bg-white pl-2.5 pr-8 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
                 />
                 <button
                   type="button"
                   onClick={() => setAfficherMdpForm((v) => !v)}
-                  className="absolute right-1 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                  className="absolute right-1 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200"
                   aria-label={afficherMdpForm ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
                   title={afficherMdpForm ? 'Masquer' : 'Afficher'}
                 >
@@ -258,15 +267,15 @@ export default function UtilisateursPage({
             <div className="flex items-end sm:col-span-2 lg:col-span-1">
               <button
                 type="submit"
-                className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-blue-700 px-3 text-sm font-semibold text-white hover:bg-blue-800"
+                className="inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg bg-blue-700 px-3 text-xs font-semibold text-white hover:bg-blue-800"
               >
-                <Plus className="h-4 w-4 shrink-0" />
+                <Plus className="h-3.5 w-3.5 shrink-0" />
                 <span className="truncate">{userEnEdition ? 'Mettre à jour' : 'Créer'}</span>
               </button>
             </div>
           </div>
 
-          <p className="text-[11px] leading-snug text-slate-500">
+          <p className="text-[11px] leading-snug text-slate-500 dark:text-slate-400">
             <strong>Admin :</strong> accès complet · <strong>Comptable :</strong> bord, historique,
             dépenses, rapports · <strong>Caissier :</strong> caisse, lecture produits.
           </p>
@@ -274,45 +283,47 @@ export default function UtilisateursPage({
       </section>
 
       {/* Liste des utilisateurs */}
-      <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-        <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 sm:px-5">
+      <section className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800 sm:px-5">
           <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-[#0A3072]" />
-            <h2 className="text-sm font-bold text-slate-900 sm:text-base">
+            <Users className="h-4 w-4 text-[#0A3072] dark:text-blue-400" />
+            <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 sm:text-base">
               Liste des utilisateurs ({utilisateurs.length})
             </h2>
           </div>
         </div>
 
         {utilisateurs.length === 0 ? (
-          <div className="p-6 text-center text-xs text-slate-500 sm:text-sm">
+          <div className="p-6 text-center text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
             Aucun utilisateur secondaire créé pour le moment. Utilisez le formulaire ci-dessus pour
             ajouter un comptable, un caissier ou un administrateur.
           </div>
         ) : (
           <>
             {/* Vue mobile */}
-            <div className="divide-y divide-slate-100 md:hidden">
+            <div className="divide-y divide-slate-100 dark:divide-slate-800 md:hidden">
               {utilisateurs.map((u) => {
                 const visible = !!mdpVisibles[u.id];
                 return (
                   <div key={u.id} className="flex items-center justify-between gap-2 p-3.5">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="font-mono text-sm font-semibold text-slate-900">
+                        <span className="font-mono text-sm font-semibold text-slate-900 dark:text-slate-100">
                           @{u.nomUtilisateur || u.nom}
                         </span>
                       </div>
                       <div className="mt-0.5 flex items-center gap-2 text-xs">
-                        <span className="font-medium text-blue-700">{LIBELLES_ROLE[u.role]}</span>
-                        <span className="text-slate-300">·</span>
-                        <span className="font-mono text-slate-600">
+                        <span className="font-medium text-blue-700 dark:text-blue-400">
+                          {LIBELLES_ROLE[u.role]}
+                        </span>
+                        <span className="text-slate-300 dark:text-slate-600">·</span>
+                        <span className="font-mono text-slate-600 dark:text-slate-400">
                           {visible ? u.motDePasse : '••••••'}
                         </span>
                         <button
                           type="button"
                           onClick={() => toggleMdpVisible(u.id)}
-                          className="rounded p-0.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                          className="rounded p-0.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
                           aria-label={
                             visible
                               ? `Masquer le mot de passe de ${u.nom}`
@@ -350,35 +361,35 @@ export default function UtilisateursPage({
             <div className="hidden overflow-x-auto md:block">
               <table className="w-full border-collapse text-left text-xs sm:text-sm">
                 <thead>
-                  <tr className="bg-[#0D357A] text-xs font-semibold text-white">
+                  <tr className="bg-[#0D357A] text-xs font-semibold text-white dark:bg-slate-800 dark:text-slate-100">
                     <th className="px-4 py-2.5">Utilisateur</th>
                     <th className="px-4 py-2.5">Rôle</th>
                     <th className="px-4 py-2.5">Mot de passe</th>
                     <th className="px-4 py-2.5 text-center">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {utilisateurs.map((u) => {
                     const visible = !!mdpVisibles[u.id];
                     return (
-                      <tr key={u.id} className="hover:bg-slate-50">
+                      <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/60">
                         <td className="px-4 py-2.5">
-                          <div className="font-mono text-xs font-semibold text-slate-900 sm:text-sm">
+                          <div className="font-mono text-xs font-semibold text-slate-900 dark:text-slate-100 sm:text-sm">
                             @{u.nomUtilisateur || u.nom}
                           </div>
                         </td>
                         <td className="px-4 py-2.5">
-                          <span className="inline-block rounded-md bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                          <span className="inline-block rounded-md bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
                             {LIBELLES_ROLE[u.role]}
                           </span>
                         </td>
-                        <td className="px-4 py-2.5 font-mono text-xs text-slate-700">
+                        <td className="px-4 py-2.5 font-mono text-xs text-slate-700 dark:text-slate-300">
                           <div className="flex items-center gap-1.5">
                             <span>{visible ? u.motDePasse : '••••••'}</span>
                             <button
                               type="button"
                               onClick={() => toggleMdpVisible(u.id)}
-                              className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                              className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
                               aria-label={
                                 visible
                                   ? `Masquer le mot de passe de ${u.nom}`

@@ -100,6 +100,42 @@ export default function Sidebar({
             </button>
           </div>
 
+          {/* Sélecteur de thème juste sous le logo / en-tête */}
+          <div className="border-b border-white/10 px-3 py-2.5">
+            <div
+              role="group"
+              aria-label="Thème d'affichage"
+              className="grid grid-cols-2 gap-1 rounded-lg bg-white/10 p-1"
+            >
+              <button
+                type="button"
+                onClick={() => onChangerTheme('clair')}
+                aria-pressed={!estThemeSombre}
+                className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-md px-2.5 text-xs font-semibold transition-colors ${
+                  !estThemeSombre
+                    ? 'bg-white text-[#0A3072] shadow-sm'
+                    : 'text-blue-100 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                <Sun className="h-3.5 w-3.5 shrink-0" />
+                Clair
+              </button>
+              <button
+                type="button"
+                onClick={() => onChangerTheme('sombre')}
+                aria-pressed={estThemeSombre}
+                className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-md px-2.5 text-xs font-semibold transition-colors ${
+                  estThemeSombre
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-blue-100 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                <Moon className="h-3.5 w-3.5 shrink-0" />
+                Sombre
+              </button>
+            </div>
+          </div>
+
           {/* Menu principal filtré selon le rôle */}
           <nav className="space-y-1 px-3 py-3" aria-label="Navigation principale">
             {menuAutorise.map((item) => {
@@ -112,7 +148,7 @@ export default function Sidebar({
                   key={item.id}
                   type="button"
                   onClick={() => selectionner(item.id)}
-                  className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[13px] font-medium transition-colors whitespace-nowrap ${
+                  className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors whitespace-nowrap ${
                     estActif
                       ? 'bg-orange-500 text-white shadow-sm'
                       : 'text-blue-100 hover:bg-white/10 hover:text-white'
@@ -124,44 +160,6 @@ export default function Sidebar({
               );
             })}
           </nav>
-
-          {/* Sélecteur de thème placé sous Paramètres */}
-          <div className="px-3 pb-4 pt-1">
-            <div className="border-t border-white/10 pt-3">
-              <div
-                role="group"
-                aria-label="Thème d'affichage"
-                className="grid grid-cols-2 gap-1 rounded-lg bg-white/10 p-0.5"
-              >
-                <button
-                  type="button"
-                  onClick={() => onChangerTheme('clair')}
-                  aria-pressed={!estThemeSombre}
-                  className={`inline-flex h-7 items-center justify-center gap-1.5 rounded-md px-2 text-xs font-semibold transition-colors ${
-                    !estThemeSombre
-                      ? 'bg-white text-[#0A3072] shadow-sm'
-                      : 'text-blue-100 hover:bg-white/10 hover:text-white'
-                  }`}
-                >
-                  <Sun className="h-3.5 w-3.5 shrink-0" />
-                  Clair
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onChangerTheme('sombre')}
-                  aria-pressed={estThemeSombre}
-                  className={`inline-flex h-7 items-center justify-center gap-1.5 rounded-md px-2 text-xs font-semibold transition-colors ${
-                    estThemeSombre
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-blue-100 hover:bg-white/10 hover:text-white'
-                  }`}
-                >
-                  <Moon className="h-3.5 w-3.5 shrink-0" />
-                  Sombre
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
       </aside>
     </>

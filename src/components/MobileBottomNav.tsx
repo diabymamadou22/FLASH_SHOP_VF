@@ -30,7 +30,7 @@ export default function MobileBottomNav({
       aria-label="Navigation mobile"
       className="no-print pb-safe fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200 bg-white/95 backdrop-blur-md transition-colors dark:border-slate-800 dark:bg-slate-900/95 lg:hidden"
     >
-      <div className="flex h-13 items-center justify-around">
+      <div className="flex h-14 items-center justify-around">
         {ongletsAutorises.map((onglet) => {
           const Icone = onglet.icone;
           const actif = pageActive === onglet.id;
@@ -39,13 +39,13 @@ export default function MobileBottomNav({
               key={onglet.id}
               type="button"
               onClick={() => onChangerPage(onglet.id)}
-              className={`flex flex-1 flex-col items-center justify-center gap-0.5 py-1 text-[10px] font-medium transition-colors ${
+              className={`flex flex-1 flex-col items-center justify-center gap-0.5 py-1.5 text-[11px] font-medium transition-colors ${
                 actif
                   ? 'text-orange-600 dark:text-orange-400'
                   : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
               }`}
             >
-              <Icone className="h-4 w-4" />
+              <Icone className="h-[18px] w-[18px]" />
               <span>{onglet.label}</span>
             </button>
           );
@@ -54,13 +54,13 @@ export default function MobileBottomNav({
         <button
           type="button"
           onClick={onOuvrirMenu}
-          className={`flex flex-1 flex-col items-center justify-center gap-0.5 py-1 text-[10px] font-medium transition-colors ${
+          className={`flex flex-1 flex-col items-center justify-center gap-0.5 py-1.5 text-[11px] font-medium transition-colors ${
             estAutrePage
               ? 'text-orange-600 dark:text-orange-400'
               : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
           }`}
         >
-          <Menu className="h-4 w-4" />
+          <Menu className="h-[18px] w-[18px]" />
           <span>Plus</span>
         </button>
       </div>

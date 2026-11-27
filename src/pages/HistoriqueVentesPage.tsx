@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import FactureImprimable, { FormatImpression } from '../components/FactureImprimable';
 import ModalSuppressionCA from '../components/ModalSuppressionCA';
-import { useToast } from '../context/ToastContext';
 import {
   imprimerOuTelechargerFacture,
   telechargerPdfFacture,
@@ -51,7 +50,6 @@ export default function HistoriqueVentesPage({
   onSupprimerVente,
   onSupprimerChiffreAffaires,
 }: HistoriqueVentesPageProps) {
-  const toast = useToast();
   const [recherche, setRecherche] = useState('');
   const [filtreType, setFiltreType] = useState<'tous' | 'comptant' | 'credit'>('tous');
   const [filtreMode, setFiltreMode] = useState<'tous' | ModePaiement>('tous');
@@ -74,7 +72,6 @@ export default function HistoriqueVentesPage({
 
   const afficherInfoImpression = (msg: string) => {
     setInfoImpression(msg);
-    toast.info('Facture PDF', msg);
     setTimeout(() => setInfoImpression(''), 5000);
   };
 
@@ -303,9 +300,9 @@ export default function HistoriqueVentesPage({
             <button
               type="button"
               onClick={() => setCibleSuppression('tout')}
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-red-600 px-2.5 text-xs font-semibold text-white hover:bg-red-700"
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-red-600 px-3 text-xs font-semibold text-white hover:bg-red-700"
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <Trash2 className="h-4 w-4" />
               Supprimer le chiffre d&apos;affaires
             </button>
           )}
@@ -370,33 +367,33 @@ export default function HistoriqueVentesPage({
                       )}
                     </div>
                   </div>
-                  <div className="flex gap-1.5">
+                  <div className="flex gap-2">
                     <a
                       href={getLienWhatsAppRecu(v)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg bg-[#16A34A] px-2.5 text-xs font-semibold text-white hover:bg-[#15803D]"
+                      className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#16A34A] px-3 text-xs font-semibold text-white hover:bg-[#15803D]"
                       title={`Envoyer le reçu ${v.numeroFacture} par WhatsApp`}
                     >
-                      <MessageCircle className="h-3.5 w-3.5" />
+                      <MessageCircle className="h-4 w-4" />
                       WhatsApp
                     </a>
                     <button
                       type="button"
                       onClick={() => setVenteSelectionnee(v)}
-                      className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg bg-blue-600 px-2.5 text-xs font-semibold text-white hover:bg-blue-700"
+                      className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3 text-xs font-semibold text-white hover:bg-blue-700"
                     >
-                      <Eye className="h-3.5 w-3.5" />
+                      <Eye className="h-4 w-4" />
                       Voir / Imprimer
                     </button>
                     {peutSupprimerCA && (
                       <button
                         type="button"
                         onClick={() => setCibleSuppression(v)}
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-600 text-xs font-semibold text-white hover:bg-red-700"
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-600 text-xs font-semibold text-white hover:bg-red-700"
                         aria-label={`Supprimer ${v.numeroFacture}`}
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     )}
                   </div>
@@ -479,34 +476,34 @@ export default function HistoriqueVentesPage({
                         {formatPrix(v.total, parametres.devise)}
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center justify-center gap-1">
+                        <div className="flex items-center justify-center gap-1.5">
                           <a
                             href={getLienWhatsAppRecu(v)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex h-7 items-center gap-1 rounded-md bg-[#16A34A] px-2 text-[11px] font-semibold text-white hover:bg-[#15803D]"
+                            className="inline-flex h-8 items-center gap-1 rounded-md bg-[#16A34A] px-2.5 text-xs font-semibold text-white hover:bg-[#15803D]"
                             title={`Envoyer le reçu ${v.numeroFacture} par WhatsApp`}
                           >
-                            <MessageCircle className="h-3 w-3" />
+                            <MessageCircle className="h-3.5 w-3.5" />
                             WhatsApp
                           </a>
                           <button
                             type="button"
                             onClick={() => setVenteSelectionnee(v)}
-                            className="inline-flex h-7 items-center gap-1 rounded-md bg-blue-600 px-2 text-[11px] font-semibold text-white hover:bg-blue-700"
+                            className="inline-flex h-8 items-center gap-1 rounded-md bg-blue-600 px-2.5 text-xs font-semibold text-white hover:bg-blue-700"
                           >
-                            <Eye className="h-3 w-3" />
+                            <Eye className="h-3.5 w-3.5" />
                             Détail
                           </button>
                           {peutSupprimerCA && (
                             <button
                               type="button"
                               onClick={() => setCibleSuppression(v)}
-                              className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-red-600 text-white hover:bg-red-700"
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-red-600 text-white hover:bg-red-700"
                               title="Supprimer cette vente"
                               aria-label={`Supprimer ${v.numeroFacture}`}
                             >
-                              <Trash2 className="h-3 w-3" />
+                              <Trash2 className="h-3.5 w-3.5" />
                             </button>
                           )}
                         </div>
@@ -535,7 +532,7 @@ export default function HistoriqueVentesPage({
                 setPageActuelle(1);
               }}
               aria-label="Nombre de factures par page"
-              className="h-7 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+              className="h-8 rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
             >
               <option value={10}>10 par page</option>
               <option value={20}>20 par page</option>
@@ -547,10 +544,10 @@ export default function HistoriqueVentesPage({
                 type="button"
                 disabled={pageSecurisee <= 1}
                 onClick={() => setPageActuelle((p) => Math.max(1, p - 1))}
-                className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                 aria-label="Page précédente"
               >
-                <ChevronLeft className="h-3.5 w-3.5" />
+                <ChevronLeft className="h-4 w-4" />
               </button>
               <span className="px-1.5 font-medium text-slate-800 tabular-nums dark:text-slate-200">
                 {pageSecurisee} / {totalPages}
@@ -559,10 +556,10 @@ export default function HistoriqueVentesPage({
                 type="button"
                 disabled={pageSecurisee >= totalPages}
                 onClick={() => setPageActuelle((p) => Math.min(totalPages, p + 1))}
-                className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                 aria-label="Page suivante"
               >
-                <ChevronRight className="h-3.5 w-3.5" />
+                <ChevronRight className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -614,31 +611,31 @@ export default function HistoriqueVentesPage({
                 href={getLienWhatsAppRecu(venteSelectionnee)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#16A34A] px-3 text-xs font-semibold text-white hover:bg-[#15803D]"
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#16A34A] px-3.5 text-xs font-semibold text-white hover:bg-[#15803D] sm:text-sm"
               >
-                <MessageCircle className="h-3.5 w-3.5" />
+                <MessageCircle className="h-4 w-4" />
                 Envoyer par WhatsApp
               </a>
               <button
                 type="button"
                 onClick={() => gererPdf(venteSelectionnee)}
-                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 sm:text-sm"
               >
-                <Download className="h-3.5 w-3.5" />
+                <Download className="h-4 w-4" />
                 Télécharger PDF
               </button>
               <button
                 type="button"
                 onClick={() => gererImpression(venteSelectionnee)}
-                className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#0A3072] px-3 text-xs font-semibold text-white hover:bg-blue-900 dark:bg-blue-700 dark:hover:bg-blue-600"
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#0A3072] px-3.5 text-xs font-semibold text-white hover:bg-blue-900 dark:bg-blue-700 dark:hover:bg-blue-600 sm:text-sm"
               >
-                <Printer className="h-3.5 w-3.5" />
+                <Printer className="h-4 w-4" />
                 Imprimer
               </button>
               <button
                 type="button"
                 onClick={() => setVenteSelectionnee(null)}
-                className="h-8 rounded-lg bg-slate-900 px-3 text-xs font-semibold text-white hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700"
+                className="h-9 rounded-lg bg-slate-900 px-3.5 text-xs font-semibold text-white hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 sm:text-sm"
               >
                 Fermer
               </button>

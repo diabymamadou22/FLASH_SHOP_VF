@@ -84,9 +84,7 @@ export default function UtilisateursPage({
     );
 
     if (!validation.valide || !validation.nomUtilisateurPropre || !validation.motDePassePropre) {
-      const msg = validation.erreur ?? 'Données invalides.';
-      setErreurUser(msg);
-      toast.erreur('Enregistrement impossible', msg);
+      setErreurUser(validation.erreur ?? 'Données invalides.');
       return;
     }
 
@@ -139,9 +137,9 @@ export default function UtilisateursPage({
         <button
           type="button"
           onClick={onRetourParametres}
-          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 sm:text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
         >
-          <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
+          <ArrowLeft className="h-4 w-4 shrink-0" />
           <span>Retour aux paramètres</span>
         </button>
       </div>
@@ -166,7 +164,7 @@ export default function UtilisateursPage({
             <button
               type="button"
               onClick={reinitialiserFormUser}
-              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+              className="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 px-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
             >
               <X className="h-3.5 w-3.5" />
               Annuler l&apos;édition
@@ -255,11 +253,11 @@ export default function UtilisateursPage({
                 <button
                   type="button"
                   onClick={() => setAfficherMdpForm((v) => !v)}
-                  className="absolute right-1 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+                  className="absolute right-1 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200"
                   aria-label={afficherMdpForm ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
                   title={afficherMdpForm ? 'Masquer' : 'Afficher'}
                 >
-                  {afficherMdpForm ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  {afficherMdpForm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
@@ -267,9 +265,9 @@ export default function UtilisateursPage({
             <div className="flex items-end sm:col-span-2 lg:col-span-1">
               <button
                 type="submit"
-                className="inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg bg-blue-700 px-3 text-xs font-semibold text-white hover:bg-blue-800"
+                className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-blue-700 px-3 text-xs font-semibold text-white hover:bg-blue-800 sm:text-sm"
               >
-                <Plus className="h-3.5 w-3.5 shrink-0" />
+                <Plus className="h-4 w-4 shrink-0" />
                 <span className="truncate">{userEnEdition ? 'Mettre à jour' : 'Créer'}</span>
               </button>
             </div>
@@ -338,18 +336,18 @@ export default function UtilisateursPage({
                       <button
                         type="button"
                         onClick={() => chargerEditionUser(u)}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+                        className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
                         aria-label={`Modifier ${u.nom}`}
                       >
-                        <Pencil className="h-3.5 w-3.5" />
+                        <Pencil className="h-4 w-4" />
                       </button>
                       <button
                         type="button"
                         onClick={() => tenterSuppressionUser(u)}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-600 text-white hover:bg-red-700"
+                        className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-600 text-white hover:bg-red-700"
                         aria-label={`Supprimer ${u.nom}`}
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
@@ -410,20 +408,20 @@ export default function UtilisateursPage({
                             <button
                               type="button"
                               onClick={() => chargerEditionUser(u)}
-                              className="rounded-lg bg-indigo-600 p-1.5 text-white hover:bg-indigo-700"
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
                               title="Modifier"
                               aria-label={`Modifier ${u.nom}`}
                             >
-                              <Pencil className="h-3.5 w-3.5" />
+                              <Pencil className="h-4 w-4" />
                             </button>
                             <button
                               type="button"
                               onClick={() => tenterSuppressionUser(u)}
-                              className="rounded-lg bg-red-600 p-1.5 text-white hover:bg-red-700"
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-red-600 text-white hover:bg-red-700"
                               title="Supprimer"
                               aria-label={`Supprimer ${u.nom}`}
                             >
-                              <Trash2 className="h-3.5 w-3.5" />
+                              <Trash2 className="h-4 w-4" />
                             </button>
                           </div>
                         </td>

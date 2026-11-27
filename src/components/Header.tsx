@@ -59,19 +59,19 @@ export default function Header({
   const peutVoirParametres = peutAccederPage(session.role, 'parametres');
 
   return (
-    <header className="no-print pt-safe sticky top-0 z-20 flex min-h-10 items-center justify-between gap-2 border-b border-slate-200 bg-white px-2.5 transition-colors dark:border-slate-800 dark:bg-slate-900 sm:min-h-11 sm:px-4">
+    <header className="no-print pt-safe sticky top-0 z-20 flex min-h-12 items-center justify-between gap-2 border-b border-slate-200 bg-white px-3 transition-colors dark:border-slate-800 dark:bg-slate-900 sm:min-h-13 sm:px-5">
       {/* Zone gauche : bouton mobile + titre de page */}
-      <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+      <div className="flex min-w-0 items-center gap-2">
         <button
           type="button"
           onClick={onOuvrirMenu}
-          className="flex h-7 w-7 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white lg:hidden"
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white lg:hidden"
           aria-label="Ouvrir le menu"
         >
-          <Menu className="h-3.5 w-3.5" />
+          <Menu className="h-4 w-4" />
         </button>
-        <div className="flex min-w-0 items-center gap-1.5">
-          <IconePage className="h-4 w-4 shrink-0 text-[#0A3072] dark:text-blue-400" />
+        <div className="flex min-w-0 items-center gap-2">
+          <IconePage className="h-4 w-4 shrink-0 text-[#0A3072] dark:text-blue-400 sm:h-5 sm:w-5" />
           <h1 className="truncate text-sm font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-base">
             {info.titre}
           </h1>
@@ -79,18 +79,18 @@ export default function Header({
       </div>
 
       {/* Zone droite : installation + alertes stock + compte connecté + déconnexion */}
-      <div className="relative flex shrink-0 items-center gap-1 sm:gap-1.5">
+      <div className="relative flex shrink-0 items-center gap-1.5 sm:gap-2">
         <PWAInstallButton />
 
         <button
           type="button"
           onClick={() => setAlertesOuvertes((prev) => !prev)}
-          className="relative flex h-7 w-7 items-center justify-center rounded-md text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+          className="relative flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
           aria-label="Alertes de stock"
         >
-          <Bell className="h-3.5 w-3.5" />
+          <Bell className="h-4 w-4" />
           {produitsEnAlerte.length > 0 && (
-            <span className="absolute right-0.5 top-0.5 flex h-3 min-w-3 items-center justify-center rounded-full bg-red-600 px-0.5 text-[8px] font-bold text-white tabular-nums">
+            <span className="absolute right-0.5 top-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-red-600 px-1 text-[9px] font-bold text-white tabular-nums">
               {produitsEnAlerte.length}
             </span>
           )}
@@ -151,19 +151,19 @@ export default function Header({
         <button
           type="button"
           onClick={() => peutVoirParametres && onAllerPage('parametres')}
-          className="flex items-center gap-1.5 rounded-md border border-slate-200 px-1.5 py-0.5 text-left transition-colors hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
+          className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-2 py-1 text-left transition-colors hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
         >
-          <UserCircle2 className="h-4 w-4 shrink-0 text-[#0A3072] dark:text-blue-400" />
+          <UserCircle2 className="h-5 w-5 shrink-0 text-[#0A3072] dark:text-blue-400" />
           <div className="hidden sm:block">
-            <div className="text-[11px] font-semibold leading-tight text-slate-900 dark:text-slate-100">
+            <div className="text-xs font-semibold leading-tight text-slate-900 dark:text-slate-100">
               {session.nom}
               {session.nomUtilisateur && session.nomUtilisateur !== session.nom && (
-                <span className="ml-1 font-mono text-[9px] font-normal text-slate-500 dark:text-slate-400">
+                <span className="ml-1 font-mono text-[10px] font-normal text-slate-500 dark:text-slate-400">
                   (@{session.nomUtilisateur})
                 </span>
               )}
             </div>
-            <div className="text-[9px] leading-tight text-slate-500 dark:text-slate-400">
+            <div className="text-[10px] leading-tight text-slate-500 dark:text-slate-400">
               {LIBELLES_ROLE[session.role]}
             </div>
           </div>
@@ -174,9 +174,9 @@ export default function Header({
           onClick={onDeconnexion}
           title="Se déconnecter"
           aria-label="Se déconnecter"
-          className="flex h-7 w-7 items-center justify-center rounded-md text-slate-500 hover:bg-red-50 hover:text-red-600 dark:text-slate-400 dark:hover:bg-red-950/50 dark:hover:text-red-400"
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-600 dark:text-slate-400 dark:hover:bg-red-950/50 dark:hover:text-red-400"
         >
-          <LogOut className="h-3.5 w-3.5" />
+          <LogOut className="h-4 w-4" />
         </button>
       </div>
     </header>

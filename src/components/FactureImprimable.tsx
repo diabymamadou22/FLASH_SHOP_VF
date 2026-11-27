@@ -120,13 +120,13 @@ export default function FactureImprimable({
                   key={opt.id}
                   type="button"
                   onClick={() => onChangerFormat(opt.id)}
-                  className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-semibold transition-colors ${
+                  className={`inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold transition-colors ${
                     actif
                       ? 'bg-[#0A3072] text-white shadow-sm'
                       : 'bg-white text-slate-700 hover:bg-slate-100 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-700'
                   }`}
                 >
-                  <Icone className="h-3 w-3" />
+                  <Icone className="h-3.5 w-3.5" />
                   {opt.label}
                 </button>
               );
@@ -148,14 +148,14 @@ export default function FactureImprimable({
                     key={d.id}
                     type="button"
                     onClick={() => onChangerDesignA4(d.id)}
-                    className={`inline-flex h-7 items-center gap-1 rounded-md border px-2 text-[11px] font-semibold transition-colors ${
+                    className={`inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition-colors ${
                       actif
                         ? 'border-slate-900 bg-slate-900 text-white shadow-sm dark:border-blue-500 dark:bg-blue-700'
                         : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-700'
                     }`}
                   >
                     <span
-                      className="h-2 w-2 shrink-0 rounded-full border border-white/40"
+                      className="h-2.5 w-2.5 shrink-0 rounded-full border border-white/40"
                       style={{ backgroundColor: d.pastille }}
                     />
                     {d.label}

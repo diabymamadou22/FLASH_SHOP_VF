@@ -247,7 +247,7 @@ export default function RapportsPage({
                   key={opt.id}
                   type="button"
                   onClick={() => setTypePeriode(opt.id)}
-                  className={`h-7 rounded-md px-2.5 text-[11px] font-semibold transition-colors ${
+                  className={`h-8 rounded-md px-3 text-xs font-semibold transition-colors ${
                     typePeriode === opt.id
                       ? 'bg-[#0A3072] text-white shadow-sm dark:bg-blue-700'
                       : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
@@ -298,17 +298,17 @@ export default function RapportsPage({
             <button
               type="button"
               onClick={gererPdf}
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 sm:text-sm"
             >
-              <Download className="h-3.5 w-3.5" />
+              <Download className="h-4 w-4" />
               Télécharger PDF
             </button>
             <button
               type="button"
               onClick={gererImpression}
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#0A3072] px-3 text-xs font-semibold text-white hover:bg-blue-900 dark:bg-blue-700 dark:hover:bg-blue-600"
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#0A3072] px-3.5 text-xs font-semibold text-white hover:bg-blue-900 dark:bg-blue-700 dark:hover:bg-blue-600 sm:text-sm"
             >
-              <Printer className="h-3.5 w-3.5" />
+              <Printer className="h-4 w-4" />
               Imprimer le rapport
             </button>
           </div>

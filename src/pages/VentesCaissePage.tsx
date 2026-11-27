@@ -87,7 +87,6 @@ export default function VentesCaissePage({
 
   const afficherInfoImpression = (msg: string) => {
     setInfoImpression(msg);
-    toast.info('Facture PDF', msg);
     setTimeout(() => setInfoImpression(''), 5000);
   };
 
@@ -289,7 +288,6 @@ export default function VentesCaissePage({
   const encaisserVente = () => {
     const signaleErreur = (msg: string) => {
       setErreur(msg);
-      toast.erreur('Validation impossible', msg);
     };
 
     if (panier.length === 0) {
@@ -409,9 +407,9 @@ export default function VentesCaissePage({
               <button
                 type="button"
                 onClick={() => setApercuOuvert(true)}
-                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-950/60"
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-950/60"
               >
-                <Receipt className="h-3.5 w-3.5" />
+                <Receipt className="h-4 w-4" />
                 Reçu {derniereVente.numeroFacture}
               </button>
             )}
@@ -419,13 +417,13 @@ export default function VentesCaissePage({
             <button
               type="button"
               onClick={() => setPanierOuvert(true)}
-              className={`inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold text-white shadow-sm transition-colors sm:flex-none ${
+              className={`inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg px-3.5 text-xs font-semibold text-white shadow-sm transition-colors sm:flex-none sm:text-sm ${
                 nbArticlesPanier > 0
                   ? 'bg-emerald-600 hover:bg-emerald-700'
                   : 'bg-[#0A3072] hover:bg-blue-900 dark:bg-blue-700 dark:hover:bg-blue-600'
               }`}
             >
-              <ShoppingCart className="h-3.5 w-3.5" />
+              <ShoppingCart className="h-4 w-4" />
               <span>Panier ({nbArticlesPanier})</span>
               {nbArticlesPanier > 0 && (
                 <span className="rounded bg-white/20 px-1.5 py-0.5 font-mono text-[11px] tabular-nums">
@@ -482,7 +480,7 @@ export default function VentesCaissePage({
                       type="button"
                       disabled={p.stock <= 0}
                       onClick={() => ajouterAuPanier(p)}
-                      className="inline-flex h-8 items-center gap-1 rounded-lg bg-blue-700 px-2.5 text-xs font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 dark:disabled:bg-slate-800 dark:disabled:text-slate-500"
+                      className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-blue-700 px-3 text-xs font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 dark:disabled:bg-slate-800 dark:disabled:text-slate-500"
                     >
                       <Plus className="h-3.5 w-3.5" />
                       Ajouter
@@ -558,10 +556,10 @@ export default function VentesCaissePage({
                         <button
                           type="button"
                           onClick={() => modifierQuantite(ligne.produitId, -1)}
-                          className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                           aria-label="Diminuer la quantité"
                         >
-                          <Minus className="h-3 w-3" />
+                          <Minus className="h-3.5 w-3.5" />
                         </button>
                         <span className="w-6 text-center font-mono text-xs font-bold text-slate-900 tabular-nums dark:text-slate-100">
                           {ligne.quantite}
@@ -569,18 +567,18 @@ export default function VentesCaissePage({
                         <button
                           type="button"
                           onClick={() => modifierQuantite(ligne.produitId, 1)}
-                          className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                           aria-label="Augmenter la quantité"
                         >
-                          <Plus className="h-3 w-3" />
+                          <Plus className="h-3.5 w-3.5" />
                         </button>
                         <button
                           type="button"
                           onClick={() => retirerDuPanier(ligne.produitId)}
-                          className="ml-0.5 flex h-7 w-7 items-center justify-center rounded-md text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
+                          className="ml-0.5 flex h-8 w-8 items-center justify-center rounded-lg text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
                           aria-label="Retirer du panier"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
                     </div>
@@ -593,14 +591,14 @@ export default function VentesCaissePage({
                   <label className="mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300">
                     Type de règlement
                   </label>
-                  <div className="grid grid-cols-2 gap-1.5 rounded-lg bg-slate-100 p-0.5 dark:bg-slate-800">
+                  <div className="grid grid-cols-2 gap-1.5 rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
                     <button
                       type="button"
                       onClick={() => {
                         setEstCredit(false);
                         setErreur('');
                       }}
-                      className={`h-7 rounded-md px-2.5 text-xs font-semibold transition-colors ${
+                      className={`h-8 rounded-md px-2.5 text-xs font-semibold transition-colors ${
                         !estCredit
                           ? 'bg-white text-emerald-700 shadow-sm dark:bg-slate-900 dark:text-emerald-400'
                           : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
@@ -614,7 +612,7 @@ export default function VentesCaissePage({
                         setEstCredit(true);
                         setErreur('');
                       }}
-                      className={`h-7 rounded-md px-2.5 text-xs font-semibold transition-colors ${
+                      className={`h-8 rounded-md px-2.5 text-xs font-semibold transition-colors ${
                         estCredit
                           ? 'bg-orange-500 text-white shadow-sm'
                           : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
@@ -794,7 +792,7 @@ export default function VentesCaissePage({
                               key={r.id}
                               type="button"
                               onClick={() => setDateEcheanceCredit(r.date)}
-                              className={`h-7 rounded-md border px-2 text-[11px] font-semibold transition-colors ${
+                              className={`h-8 rounded-md border px-2.5 text-[11px] font-semibold transition-colors ${
                                 actif
                                   ? 'border-orange-500 bg-orange-500 text-white shadow-sm'
                                   : 'border-slate-200 bg-white text-slate-700 hover:border-orange-300 hover:bg-orange-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-orange-500/60 dark:hover:bg-orange-950/40'
@@ -995,7 +993,7 @@ export default function VentesCaissePage({
                   panier.length === 0 ||
                   (estCredit && etatLimiteCredit.active && etatLimiteCredit.depassee)
                 }
-                className={`h-9 w-full rounded-lg px-3 text-xs font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 dark:disabled:bg-slate-800 dark:disabled:text-slate-500 sm:text-sm ${
+                className={`h-10 w-full rounded-xl px-4 text-sm font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 dark:disabled:bg-slate-800 dark:disabled:text-slate-500 ${
                   estCredit ? 'bg-orange-500 hover:bg-orange-600' : 'bg-emerald-600 hover:bg-emerald-700'
                 }`}
               >
@@ -1053,23 +1051,23 @@ export default function VentesCaissePage({
               <button
                 type="button"
                 onClick={() => gererPdf(derniereVente)}
-                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 sm:text-sm"
               >
-                <Download className="h-3.5 w-3.5" />
+                <Download className="h-4 w-4" />
                 Télécharger PDF
               </button>
               <button
                 type="button"
                 onClick={() => gererImpression(derniereVente)}
-                className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#0A3072] px-3 text-xs font-semibold text-white hover:bg-blue-900 dark:bg-blue-700 dark:hover:bg-blue-600"
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#0A3072] px-3.5 text-xs font-semibold text-white hover:bg-blue-900 dark:bg-blue-700 dark:hover:bg-blue-600 sm:text-sm"
               >
-                <Printer className="h-3.5 w-3.5" />
+                <Printer className="h-4 w-4" />
                 Imprimer
               </button>
               <button
                 type="button"
                 onClick={() => setApercuOuvert(false)}
-                className="h-8 rounded-lg bg-slate-900 px-3 text-xs font-semibold text-white hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700"
+                className="h-9 rounded-lg bg-slate-900 px-3.5 text-xs font-semibold text-white hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 sm:text-sm"
               >
                 Fermer
               </button>

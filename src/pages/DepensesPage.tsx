@@ -11,7 +11,6 @@ import {
   Wallet,
   X,
 } from 'lucide-react';
-import { useToast } from '../context/ToastContext';
 import { calculerSoldeDisponible, verifierDepenseAutorisee } from '../services/depenses';
 import { ApportCaisse, Depense, Vente } from '../types';
 import { formatDateCourte, formatPrix, genererId } from '../utils/format';
@@ -48,7 +47,6 @@ export default function DepensesPage({
   onAjouterApportCaisse,
   onSupprimerApportCaisse,
 }: DepensesPageProps) {
-  const toast = useToast();
   const [libelle, setLibelle] = useState('');
   const [categorie, setCategorie] = useState<Depense['categorie']>('Loyer');
   const [montant, setMontant] = useState('');
@@ -124,17 +122,13 @@ export default function DepensesPage({
     e.preventDefault();
     const valeur = Number(montant);
     if (!libelle.trim()) {
-      const msg = 'Veuillez saisir un libellé pour la dépense.';
-      setErreur(msg);
-      toast.erreur('Champ requis', msg);
+      setErreur('Veuillez saisir un libellé pour la dépense.');
       return;
     }
 
     const verif = verifierDepenseAutorisee(valeur, ventes, depenses, devise, apportsCaisse);
     if (!verif.autorise) {
-      const msg = verif.erreur ?? 'Dépense refusée : solde insuffisant.';
-      setErreur(msg);
-      toast.erreur('Dépense refusée', msg);
+      setErreur(verif.erreur ?? 'Dépense refusée : solde insuffisant.');
       return;
     }
 
@@ -156,15 +150,11 @@ export default function DepensesPage({
     e.preventDefault();
     const valeur = Number(montantApport);
     if (!libelleApport.trim()) {
-      const msg = 'Veuillez saisir un motif pour cet apport.';
-      setErreurApport(msg);
-      toast.erreur('Champ requis', msg);
+      setErreurApport('Veuillez saisir un motif pour cet apport.');
       return;
     }
     if (!Number.isFinite(valeur) || valeur <= 0) {
-      const msg = 'Veuillez saisir un montant valide supérieur à 0.';
-      setErreurApport(msg);
-      toast.erreur('Montant invalide', msg);
+      setErreurApport('Veuillez saisir un montant valide supérieur à 0.');
       return;
     }
 
@@ -217,9 +207,9 @@ export default function DepensesPage({
                 setErreurApport('');
                 setModalApportOuverte(true);
               }}
-              className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-[#0A3072] hover:bg-blue-100 dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-900/60"
+              className="inline-flex h-7 items-center gap-1 rounded-md bg-blue-50 px-2.5 text-xs font-semibold text-[#0A3072] hover:bg-blue-100 dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-900/60"
             >
-              <Plus className="h-3 w-3" />
+              <Plus className="h-3.5 w-3.5" />
               Ajouter
             </button>
           </div>
@@ -378,9 +368,9 @@ export default function DepensesPage({
             <button
               type="submit"
               disabled={depassementEnDirect || tresorerie.soldeDisponible <= 0}
-              className="inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg bg-blue-700 px-3 text-xs font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 dark:disabled:bg-slate-800 dark:disabled:text-slate-500"
+              className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-blue-700 px-3.5 text-xs font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 dark:disabled:bg-slate-800 dark:disabled:text-slate-500 sm:text-sm"
             >
-              <Plus className="h-3.5 w-3.5 shrink-0" />
+              <Plus className="h-4 w-4 shrink-0" />
               Ajouter
             </button>
           </div>
@@ -488,7 +478,7 @@ export default function DepensesPage({
                   <button
                     type="button"
                     onClick={() => setCibleSuppression({ type: 'depense', item: d })}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-600 text-white hover:bg-red-700"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-600 text-white hover:bg-red-700"
                     aria-label={`Supprimer ${d.libelle}`}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -538,11 +528,11 @@ export default function DepensesPage({
                       <button
                         type="button"
                         onClick={() => setCibleSuppression({ type: 'depense', item: d })}
-                        className="rounded-lg bg-red-600 p-1.5 text-white hover:bg-red-700"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-red-600 text-white hover:bg-red-700"
                         title="Supprimer"
                         aria-label={`Supprimer ${d.libelle}`}
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     </td>
                   </tr>
@@ -582,7 +572,7 @@ export default function DepensesPage({
                   <button
                     type="button"
                     onClick={() => setCibleSuppression({ type: 'apport', item: a })}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-600 text-white hover:bg-red-700"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-600 text-white hover:bg-red-700"
                     aria-label={`Supprimer l'apport ${a.libelle}`}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -654,15 +644,15 @@ export default function DepensesPage({
                 <button
                   type="button"
                   onClick={() => setModalApportOuverte(false)}
-                  className="h-8 flex-1 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                  className="h-9 flex-1 rounded-lg border border-slate-200 px-3.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 sm:text-sm"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
-                  className="inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#0A3072] px-3 text-xs font-semibold text-white hover:bg-blue-900 dark:bg-blue-700 dark:hover:bg-blue-600"
+                  className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#0A3072] px-3.5 text-xs font-semibold text-white hover:bg-blue-900 dark:bg-blue-700 dark:hover:bg-blue-600 sm:text-sm"
                 >
-                  <Plus className="h-3.5 w-3.5" />
+                  <Plus className="h-4 w-4" />
                   Enregistrer l&apos;apport
                 </button>
               </div>
@@ -691,7 +681,7 @@ export default function DepensesPage({
               <button
                 type="button"
                 onClick={() => setCibleSuppression(null)}
-                className="h-8 rounded-lg border border-slate-200 px-3 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                className="h-9 rounded-lg border border-slate-200 px-3.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 sm:text-sm"
               >
                 Annuler
               </button>
@@ -705,7 +695,7 @@ export default function DepensesPage({
                   }
                   setCibleSuppression(null);
                 }}
-                className="h-8 rounded-lg bg-red-600 px-3.5 text-xs font-semibold text-white hover:bg-red-700"
+                className="h-9 rounded-lg bg-red-600 px-4 text-xs font-semibold text-white hover:bg-red-700 sm:text-sm"
               >
                 Supprimer
               </button>

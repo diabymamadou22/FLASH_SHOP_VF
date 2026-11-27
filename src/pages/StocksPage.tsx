@@ -176,25 +176,25 @@ export default function StocksPage({
               <button
                 type="button"
                 onClick={() => setType('entree')}
-                className={`flex h-8 items-center justify-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold ${
+                className={`flex h-9 items-center justify-center gap-1.5 rounded-lg border px-3 text-xs font-semibold sm:text-sm ${
                   type === 'entree'
                     ? 'border-emerald-600 bg-emerald-50 text-emerald-700 dark:border-emerald-500 dark:bg-emerald-950/50 dark:text-emerald-300'
                     : 'border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'
                 }`}
               >
-                <ArrowDownCircle className="h-3.5 w-3.5" />
+                <ArrowDownCircle className="h-4 w-4" />
                 Entrée (+)
               </button>
               <button
                 type="button"
                 onClick={() => setType('sortie')}
-                className={`flex h-8 items-center justify-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold ${
+                className={`flex h-9 items-center justify-center gap-1.5 rounded-lg border px-3 text-xs font-semibold sm:text-sm ${
                   type === 'sortie'
                     ? 'border-red-600 bg-red-50 text-red-700 dark:border-red-500 dark:bg-red-950/50 dark:text-red-300'
                     : 'border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'
                 }`}
               >
-                <ArrowUpCircle className="h-3.5 w-3.5" />
+                <ArrowUpCircle className="h-4 w-4" />
                 Sortie (-)
               </button>
             </div>
@@ -229,7 +229,7 @@ export default function StocksPage({
 
           <button
             type="submit"
-            className="h-8 w-full rounded-lg bg-blue-700 px-3 text-xs font-semibold text-white hover:bg-blue-800"
+            className="h-9 w-full rounded-lg bg-blue-700 px-3.5 text-xs font-semibold text-white hover:bg-blue-800 sm:text-sm"
           >
             Enregistrer le mouvement
           </button>

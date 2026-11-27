@@ -108,19 +108,16 @@ export default function App() {
       donnees.parametres.codeMaitreAdmin
     );
     if (!nouvelleSession) {
-      toast.erreur('Connexion refusée', "Nom d'utilisateur ou mot de passe incorrect.");
       return false;
     }
     setSession(nouvelleSession);
     setPageActive(getPageDefautRole(nouvelleSession.role));
-    toast.succes('Connexion réussie', `Bienvenue, ${nouvelleSession.nom}.`);
     return true;
   };
 
   const gererDeconnexion = () => {
     setSession(null);
     setMenuMobileOuvert(false);
-    toast.info('Session fermée', 'Vous êtes déconnecté.');
   };
 
   const changerPage = (page: PageId) => {
@@ -137,7 +134,6 @@ export default function App() {
       ...prev,
       produits: [produit, ...prev.produits],
     }));
-    toast.succes('Produit ajouté', `${produit.nom} (${produit.reference}) ajouté au catalogue.`);
   };
 
   const modifierProduit = (produitModifie: Produit) => {
@@ -145,7 +141,6 @@ export default function App() {
       ...prev,
       produits: prev.produits.map((p) => (p.id === produitModifie.id ? produitModifie : p)),
     }));
-    toast.succes('Produit mis à jour', `${produitModifie.nom} a été enregistré.`);
   };
 
   const supprimerProduit = (id: string) => {
@@ -166,7 +161,6 @@ export default function App() {
       ...prev,
       categories: [...prev.categories, categorie],
     }));
-    toast.succes('Catégorie ajoutée', `"${categorie.nom}" créée avec succès.`);
   };
 
   const modifierCategorie = (categorieModifiee: Categorie) => {
@@ -176,7 +170,6 @@ export default function App() {
         c.id === categorieModifiee.id ? categorieModifiee : c
       ),
     }));
-    toast.succes('Catégorie mise à jour', `"${categorieModifiee.nom}" enregistrée.`);
   };
 
   const supprimerCategorie = (id: string) => {
@@ -209,11 +202,6 @@ export default function App() {
         ventes: [vente, ...prev.ventes],
       };
     });
-    const montantFormate = formatPrix(vente.total, donnees.parametres.devise);
-    toast.succes(
-      vente.estCredit ? 'Vente à crédit enregistrée' : 'Vente validée',
-      `${vente.numeroFacture} · ${vente.clientNom} (${montantFormate})`
-    );
   };
 
   const supprimerVente = (id: string) => {
@@ -270,7 +258,6 @@ export default function App() {
   };
 
   const enregistrerPaiementCredit = (venteId: string, paiement: PaiementCredit) => {
-    const cible = donnees.ventes.find((v) => v.id === venteId);
     setDonnees((prev) => ({
       ...prev,
       ventes: prev.ventes.map((v) => {
@@ -284,12 +271,6 @@ export default function App() {
         };
       }),
     }));
-    toast.succes(
-      'Versement encaissé',
-      `${formatPrix(paiement.montant, donnees.parametres.devise)}${
-        cible ? ` reçu de ${cible.clientNom}` : ''
-      }.`
-    );
   };
 
   const modifierEcheanceCredit = (venteId: string, nouvelleDate?: string) => {
@@ -304,12 +285,6 @@ export default function App() {
           : v
       ),
     }));
-    toast.succes(
-      'Échéance mise à jour',
-      nouvelleDate?.trim()
-        ? 'Nouvelle date de paiement enregistrée.'
-        : "Date d'échéance retirée."
-    );
   };
 
   // --- Mouvement de stock manuel (entrée ou sortie) ---
@@ -346,7 +321,6 @@ export default function App() {
       donnees.apportsCaisse ?? []
     );
     if (!verif.autorise) {
-      toast.erreur('Dépense refusée', verif.erreur ?? 'Solde disponible insuffisant.');
       return;
     }
     setDonnees((prev) => {
@@ -363,10 +337,6 @@ export default function App() {
         depenses: [depense, ...prev.depenses],
       };
     });
-    toast.succes(
-      'Dépense enregistrée',
-      `${depense.libelle} · ${formatPrix(depense.montant, donnees.parametres.devise)}`
-    );
   };
 
   const supprimerDepense = (id: string) => {
@@ -383,10 +353,6 @@ export default function App() {
       ...prev,
       apportsCaisse: [apport, ...(prev.apportsCaisse ?? [])],
     }));
-    toast.succes(
-      'Apport en caisse ajouté',
-      `${apport.libelle} · ${formatPrix(apport.montant, donnees.parametres.devise)}`
-    );
   };
 
   const supprimerApportCaisse = (id: string) => {
@@ -400,7 +366,6 @@ export default function App() {
 
   const restaurerBase = (nouvelleBase: BaseDonnees) => {
     setDonnees(nouvelleBase);
-    toast.succes('Sauvegarde restaurée', 'Les données de la boutique ont été restaurées.');
   };
 
   // --- Utilisateurs & Paramètres ---
@@ -409,7 +374,6 @@ export default function App() {
       ...prev,
       utilisateurs: [...prev.utilisateurs, utilisateur],
     }));
-    toast.succes('Utilisateur créé', `Compte "@${utilisateur.nomUtilisateur || utilisateur.nom}" ajouté.`);
   };
 
   const modifierUtilisateur = (utilisateurModifie: Utilisateur) => {
@@ -428,10 +392,6 @@ export default function App() {
             role: utilisateurModifie.role,
           }
         : prev
-    );
-    toast.succes(
-      'Utilisateur mis à jour',
-      `Compte "@${utilisateurModifie.nomUtilisateur || utilisateurModifie.nom}" modifié.`
     );
   };
 
@@ -464,10 +424,6 @@ export default function App() {
         theme: nouveauTheme,
       },
     }));
-    toast.succes(
-      nouveauTheme === 'sombre' ? 'Thème sombre activé' : 'Thème clair activé',
-      'Préférence enregistrée.'
-    );
   };
 
   // Écran de connexion si aucune session n'est active

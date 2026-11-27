@@ -21,7 +21,6 @@ import {
   X,
 } from 'lucide-react';
 import { DESIGNS_FACTURE_A4 } from '../components/FactureImprimable';
-import { useToast } from '../context/ToastContext';
 import { verifierMotDePasseSuperAdmin } from '../services/auth';
 import { exporterBaseJson, importerBaseJson } from '../services/database';
 import { exporterDonneesExcel, exporterDonneesWord } from '../services/exportDonnees';
@@ -46,7 +45,6 @@ export default function ParametresPage({
   onRestaurerBase,
   onAllerUtilisateurs,
 }: ParametresPageProps) {
-  const toast = useToast();
   const [form, setForm] = useState<ParametresBoutique>(donnees.parametres);
   const [messageSucces, setMessageSucces] = useState('');
   const [messageErreur, setMessageErreur] = useState('');
@@ -73,19 +71,15 @@ export default function ParametresPage({
     setForm(donnees.parametres);
   }, [donnees.parametres]);
 
-  const afficherSucces = (msg: string, avecToast = true) => {
+  const afficherSucces = (msg: string, _avecToast = false) => {
     setMessageErreur('');
     setMessageSucces(msg);
-    if (avecToast) {
-      toast.succes('Paramètres', msg);
-    }
     setTimeout(() => setMessageSucces(''), 4000);
   };
 
   const afficherErreur = (msg: string) => {
     setMessageSucces('');
     setMessageErreur(msg);
-    toast.erreur('Erreur paramètres', msg);
   };
 
   const estThemeSombre = (form.theme ?? 'clair') === 'sombre';
@@ -315,30 +309,30 @@ export default function ParametresPage({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-center">
-            <div className="inline-flex rounded-md bg-slate-100 p-0.5 dark:bg-slate-800">
+          <div className="flex items-center gap-2.5 self-start sm:self-center">
+            <div className="inline-flex rounded-lg bg-slate-100 p-0.5 dark:bg-slate-800">
               <button
                 type="button"
                 onClick={() => basculerTheme('clair')}
-                className={`inline-flex h-5 items-center gap-0.5 rounded px-1.5 text-[10px] leading-none font-semibold transition-colors whitespace-nowrap ${
+                className={`inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-xs font-semibold transition-colors whitespace-nowrap ${
                   !estThemeSombre
                     ? 'bg-white text-[#0A3072] shadow-sm dark:bg-slate-700 dark:text-white'
                     : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
                 }`}
               >
-                <Sun className="h-2.5 w-2.5" />
+                <Sun className="h-3.5 w-3.5" />
                 Clair
               </button>
               <button
                 type="button"
                 onClick={() => basculerTheme('sombre')}
-                className={`inline-flex h-5 items-center gap-0.5 rounded px-1.5 text-[10px] leading-none font-semibold transition-colors whitespace-nowrap ${
+                className={`inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-xs font-semibold transition-colors whitespace-nowrap ${
                   estThemeSombre
                     ? 'bg-[#0A3072] text-white shadow-sm dark:bg-blue-600'
                     : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
                 }`}
               >
-                <Moon className="h-2.5 w-2.5" />
+                <Moon className="h-3.5 w-3.5" />
                 Sombre
               </button>
             </div>
@@ -349,13 +343,13 @@ export default function ParametresPage({
               aria-checked={estThemeSombre}
               aria-label="Activer ou désactiver le thème sombre"
               onClick={() => basculerTheme()}
-              className={`relative inline-flex h-4 w-7 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 ${
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 ${
                 estThemeSombre ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-700'
               }`}
             >
               <span
-                className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow-sm transition-transform ${
-                  estThemeSombre ? 'translate-x-3' : 'translate-x-0'
+                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
+                  estThemeSombre ? 'translate-x-4' : 'translate-x-0'
                 }`}
               />
             </button>
@@ -384,11 +378,11 @@ export default function ParametresPage({
           <button
             type="button"
             onClick={onAllerUtilisateurs}
-            className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[#0A3072] px-3 text-xs font-semibold text-white transition-colors hover:bg-blue-900 dark:bg-blue-700 dark:hover:bg-blue-600"
+            className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[#0A3072] px-3.5 text-xs font-semibold text-white transition-colors hover:bg-blue-900 sm:text-sm dark:bg-blue-700 dark:hover:bg-blue-600"
           >
-            <Users className="h-3.5 w-3.5 shrink-0" />
+            <Users className="h-4 w-4 shrink-0" />
             <span>Gérer les utilisateurs</span>
-            <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+            <ChevronRight className="h-4 w-4 shrink-0" />
           </button>
         </div>
       </section>
@@ -417,19 +411,19 @@ export default function ParametresPage({
             <button
               type="button"
               onClick={() => inputLogoRef.current?.click()}
-              className="inline-flex h-7 items-center gap-1 rounded-lg bg-[#0A3072] px-2.5 text-[11px] font-semibold text-white hover:bg-blue-900 dark:bg-blue-700 dark:hover:bg-blue-600"
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#0A3072] px-3 text-xs font-semibold text-white hover:bg-blue-900 dark:bg-blue-700 dark:hover:bg-blue-600"
             >
-              <ImagePlus className="h-3 w-3" />
+              <ImagePlus className="h-3.5 w-3.5" />
               Importer mon logo
             </button>
             {form.logoDataUrl && (
               <button
                 type="button"
                 onClick={reinitialiserLogo}
-                className="inline-flex h-7 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                 title="Rétablir le logo par défaut"
               >
-                <RotateCcw className="h-3 w-3" />
+                <RotateCcw className="h-3.5 w-3.5" />
                 Défaut
               </button>
             )}
@@ -566,14 +560,14 @@ export default function ParametresPage({
                     onClick={() =>
                       setForm({ ...form, designFactureA4: d.id as DesignFactureA4 })
                     }
-                    className={`inline-flex h-7 items-center gap-1 rounded-md border px-2 text-[11px] font-semibold transition-colors ${
+                    className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs font-semibold transition-colors ${
                       actif
                         ? 'border-slate-900 bg-slate-900 text-white shadow-sm dark:border-blue-500 dark:bg-blue-700'
                         : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
                     }`}
                   >
                     <span
-                      className="h-2 w-2 shrink-0 rounded-full border border-white/40"
+                      className="h-2.5 w-2.5 shrink-0 rounded-full border border-white/40"
                       style={{ backgroundColor: d.pastille }}
                     />
                     {d.label}
@@ -586,9 +580,9 @@ export default function ParametresPage({
           <div className="flex items-end">
             <button
               type="submit"
-              className="inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg bg-blue-700 px-3 text-xs font-semibold text-white hover:bg-blue-800"
+              className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-blue-700 px-3.5 text-xs font-semibold text-white hover:bg-blue-800 sm:text-sm"
             >
-              <Save className="h-3.5 w-3.5" />
+              <Save className="h-4 w-4" />
               Enregistrer
             </button>
           </div>
@@ -654,7 +648,7 @@ export default function ParametresPage({
                     key={opt.id}
                     type="button"
                     onClick={() => setForm({ ...form, modeLimiteCredit: opt.id })}
-                    className={`h-7 rounded-md px-2 text-[11px] font-semibold transition-colors ${
+                    className={`h-8 rounded-md px-2.5 text-xs font-semibold transition-colors ${
                       actif
                         ? 'bg-white text-[#0A3072] shadow-sm dark:bg-slate-700 dark:text-white'
                         : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
@@ -670,9 +664,9 @@ export default function ParametresPage({
           <div className="flex items-end">
             <button
               type="submit"
-              className="inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg bg-orange-600 px-3 text-xs font-semibold text-white hover:bg-orange-700"
+              className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-orange-600 px-3.5 text-xs font-semibold text-white hover:bg-orange-700 sm:text-sm"
             >
-              <Save className="h-3.5 w-3.5" />
+              <Save className="h-4 w-4" />
               Appliquer la limite
             </button>
           </div>
@@ -705,9 +699,9 @@ export default function ParametresPage({
               type="button"
               disabled={exportEnCours !== null}
               onClick={lancerExportExcel}
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 sm:text-sm"
             >
-              <FileSpreadsheet className="h-3.5 w-3.5 shrink-0" />
+              <FileSpreadsheet className="h-4 w-4 shrink-0" />
               {exportEnCours === 'excel' ? 'Export Excel...' : 'Exporter en Excel (.xlsx)'}
             </button>
 
@@ -715,9 +709,9 @@ export default function ParametresPage({
               type="button"
               disabled={exportEnCours !== null}
               onClick={lancerExportWord}
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#0A3072] px-3 text-xs font-semibold text-white hover:bg-blue-900 disabled:opacity-60 dark:bg-blue-700 dark:hover:bg-blue-600"
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#0A3072] px-3.5 text-xs font-semibold text-white hover:bg-blue-900 disabled:opacity-60 sm:text-sm dark:bg-blue-700 dark:hover:bg-blue-600"
             >
-              <FileText className="h-3.5 w-3.5 shrink-0" />
+              <FileText className="h-4 w-4 shrink-0" />
               {exportEnCours === 'word' ? 'Export Word...' : 'Exporter en Word (.docx)'}
             </button>
           </div>
@@ -751,18 +745,18 @@ export default function ParametresPage({
             <button
               type="button"
               onClick={telechargerSauvegardeJson}
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#0A3072] px-3 text-xs font-semibold text-white hover:bg-blue-900 dark:bg-blue-700 dark:hover:bg-blue-600"
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#0A3072] px-3.5 text-xs font-semibold text-white hover:bg-blue-900 sm:text-sm dark:bg-blue-700 dark:hover:bg-blue-600"
             >
-              <Download className="h-3.5 w-3.5 shrink-0" />
+              <Download className="h-4 w-4 shrink-0" />
               Sauvegarder (.json)
             </button>
 
             <button
               type="button"
               onClick={() => inputRestaurationRef.current?.click()}
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 sm:text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
             >
-              <Upload className="h-3.5 w-3.5 shrink-0" />
+              <Upload className="h-4 w-4 shrink-0" />
               Restaurer (.json)
             </button>
           </div>
@@ -851,9 +845,9 @@ export default function ParametresPage({
           <div className="flex items-end">
             <button
               type="submit"
-              className="inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg bg-[#0A3072] px-3 text-xs font-semibold text-white hover:bg-blue-900 dark:bg-blue-700 dark:hover:bg-blue-600"
+              className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-[#0A3072] px-3.5 text-xs font-semibold text-white hover:bg-blue-900 sm:text-sm dark:bg-blue-700 dark:hover:bg-blue-600"
             >
-              <Save className="h-3.5 w-3.5" />
+              <Save className="h-4 w-4" />
               Changer le mot de passe
             </button>
           </div>
@@ -916,14 +910,14 @@ export default function ParametresPage({
               <button
                 type="button"
                 onClick={() => setSauvegardeEnAttente(null)}
-                className="h-8 flex-1 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                className="h-9 flex-1 rounded-lg border border-slate-200 px-3.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 sm:text-sm dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
               >
                 Annuler
               </button>
               <button
                 type="button"
                 onClick={confirmerRestauration}
-                className="h-8 flex-1 rounded-lg bg-orange-600 px-3 text-xs font-semibold text-white hover:bg-orange-700"
+                className="h-9 flex-1 rounded-lg bg-orange-600 px-3.5 text-xs font-semibold text-white hover:bg-orange-700 sm:text-sm"
               >
                 Confirmer la restauration
               </button>

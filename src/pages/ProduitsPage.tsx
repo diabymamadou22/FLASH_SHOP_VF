@@ -14,7 +14,6 @@ import {
   X,
   XCircle,
 } from 'lucide-react';
-import { useToast } from '../context/ToastContext';
 import { Categorie, Produit, StatutStock } from '../types';
 import { formatNombre, formatPrix, genererId, getStatutStock } from '../utils/format';
 
@@ -49,7 +48,6 @@ export default function ProduitsPage({
   onModifierProduit,
   onSupprimerProduit,
 }: ProduitsPageProps) {
-  const toast = useToast();
   const [recherche, setRecherche] = useState('');
   const [filtreCategorie, setFiltreCategorie] = useState('toutes');
   const [filtreStatut, setFiltreStatut] = useState<'tous' | StatutStock>('tous');
@@ -179,7 +177,6 @@ export default function ProduitsPage({
 
     const signaleErreur = (msg: string) => {
       setErreurForm(msg);
-      toast.erreur('Enregistrement impossible', msg);
     };
 
     if (!referencePropre || !form.nom.trim()) {
@@ -458,13 +455,13 @@ export default function ProduitsPage({
                   </div>
                 </div>
 
-                <div className={`mt-3 grid gap-1.5 ${lectureSeule ? 'grid-cols-1' : 'grid-cols-3'}`}>
+                <div className={`mt-3 grid gap-2 ${lectureSeule ? 'grid-cols-1' : 'grid-cols-3'}`}>
                   <button
                     type="button"
                     onClick={() => setProduitDetail(produit)}
-                    className="flex h-8 items-center justify-center gap-1 rounded-lg bg-blue-600 px-2.5 text-xs font-semibold text-white hover:bg-blue-700"
+                    className="flex h-9 items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3 text-xs font-semibold text-white hover:bg-blue-700"
                   >
-                    <Eye className="h-3 w-3" />
+                    <Eye className="h-3.5 w-3.5" />
                     Voir
                   </button>
                   {!lectureSeule && (
@@ -472,17 +469,17 @@ export default function ProduitsPage({
                       <button
                         type="button"
                         onClick={() => ouvrirEdition(produit)}
-                        className="flex h-8 items-center justify-center gap-1 rounded-lg bg-indigo-600 px-2.5 text-xs font-semibold text-white hover:bg-indigo-700"
+                        className="flex h-9 items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-3 text-xs font-semibold text-white hover:bg-indigo-700"
                       >
-                        <Pencil className="h-3 w-3" />
+                        <Pencil className="h-3.5 w-3.5" />
                         Modifier
                       </button>
                       <button
                         type="button"
                         onClick={() => setProduitASupprimer(produit)}
-                        className="flex h-8 items-center justify-center gap-1 rounded-lg bg-red-600 px-2.5 text-xs font-semibold text-white hover:bg-red-700"
+                        className="flex h-9 items-center justify-center gap-1.5 rounded-lg bg-red-600 px-3 text-xs font-semibold text-white hover:bg-red-700"
                       >
-                        <Trash2 className="h-3 w-3" />
+                        <Trash2 className="h-3.5 w-3.5" />
                         Suppr.
                       </button>
                     </>
@@ -622,7 +619,7 @@ export default function ProduitsPage({
                 setPageActuelle(1);
               }}
               aria-label="Nombre de lignes par page"
-              className="h-7 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+              className="h-8 rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
             >
               <option value={6}>6 par page</option>
               <option value={10}>10 par page</option>
@@ -634,10 +631,10 @@ export default function ProduitsPage({
                 type="button"
                 disabled={pageSecurisee <= 1}
                 onClick={() => setPageActuelle((p) => Math.max(1, p - 1))}
-                className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                 aria-label="Page précédente"
               >
-                <ChevronLeft className="h-3.5 w-3.5" />
+                <ChevronLeft className="h-4 w-4" />
               </button>
               <span className="px-1.5 font-medium text-slate-800 tabular-nums dark:text-slate-200">
                 {pageSecurisee} / {totalPages}
@@ -646,10 +643,10 @@ export default function ProduitsPage({
                 type="button"
                 disabled={pageSecurisee >= totalPages}
                 onClick={() => setPageActuelle((p) => Math.min(totalPages, p + 1))}
-                className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                 aria-label="Page suivante"
               >
-                <ChevronRight className="h-3.5 w-3.5" />
+                <ChevronRight className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -837,13 +834,13 @@ export default function ProduitsPage({
                 <button
                   type="button"
                   onClick={() => setModalFormOuverte(false)}
-                  className="h-8 rounded-lg border border-slate-200 px-3 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                  className="h-9 rounded-lg border border-slate-200 px-3.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 sm:text-sm"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
-                  className="h-8 rounded-lg bg-blue-700 px-3.5 text-xs font-semibold text-white hover:bg-blue-800"
+                  className="h-9 rounded-lg bg-blue-700 px-4 text-xs font-semibold text-white hover:bg-blue-800 sm:text-sm"
                 >
                   {produitEnEdition ? 'Enregistrer' : 'Ajouter'}
                 </button>
@@ -924,7 +921,7 @@ export default function ProduitsPage({
               <button
                 type="button"
                 onClick={() => setProduitDetail(null)}
-                className="h-8 rounded-lg bg-slate-900 px-3.5 text-xs font-medium text-white hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700"
+                className="h-9 rounded-lg bg-slate-900 px-4 text-xs font-medium text-white hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 sm:text-sm"
               >
                 Fermer
               </button>
@@ -947,7 +944,7 @@ export default function ProduitsPage({
               <button
                 type="button"
                 onClick={() => setProduitASupprimer(null)}
-                className="h-8 rounded-lg border border-slate-200 px-3 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                className="h-9 rounded-lg border border-slate-200 px-3.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 sm:text-sm"
               >
                 Annuler
               </button>
@@ -957,7 +954,7 @@ export default function ProduitsPage({
                   onSupprimerProduit(produitASupprimer.id);
                   setProduitASupprimer(null);
                 }}
-                className="h-8 rounded-lg bg-red-600 px-3.5 text-xs font-semibold text-white hover:bg-red-700"
+                className="h-9 rounded-lg bg-red-600 px-4 text-xs font-semibold text-white hover:bg-red-700 sm:text-sm"
               >
                 Supprimer
               </button>

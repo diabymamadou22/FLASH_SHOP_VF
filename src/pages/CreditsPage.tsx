@@ -19,7 +19,6 @@ import {
 } from 'lucide-react';
 import FactureImprimable, { FormatImpression } from '../components/FactureImprimable';
 import ModalSuppressionCA from '../components/ModalSuppressionCA';
-import { useToast } from '../context/ToastContext';
 import {
   getRaccourcisEcheanceCredit,
   getStatutEcheanceCredit,
@@ -74,7 +73,6 @@ export default function CreditsPage({
   onSupprimerVente,
   onSauvegarderParametres,
 }: CreditsPageProps) {
-  const toast = useToast();
   const [recherche, setRecherche] = useState('');
   const [filtreStatut, setFiltreStatut] = useState<FiltreStatutCredit>('en_cours');
   const [vueCredits, setVueCredits] = useState<VueCredits>('factures');
@@ -112,7 +110,6 @@ export default function CreditsPage({
 
   const afficherInfoImpression = (msg: string) => {
     setInfoImpression(msg);
-    toast.info('Facture PDF', msg);
     setTimeout(() => setInfoImpression(''), 5000);
   };
 
@@ -313,16 +310,14 @@ export default function CreditsPage({
     const montant = Number(montantVersement);
 
     if (!Number.isFinite(montant) || montant <= 0) {
-      const msg = 'Veuillez saisir un montant valide supérieur à 0.';
-      setErreurModal(msg);
-      toast.erreur('Montant invalide', msg);
+      setErreurModal('Veuillez saisir un montant valide supérieur à 0.');
       return;
     }
 
     if (montant > reste) {
-      const msg = `Le montant ne peut pas dépasser le reste à payer (${formatPrix(reste, parametres.devise)}).`;
-      setErreurModal(msg);
-      toast.erreur('Montant trop élevé', msg);
+      setErreurModal(
+        `Le montant ne peut pas dépasser le reste à payer (${formatPrix(reste, parametres.devise)}).`
+      );
       return;
     }
 
@@ -359,7 +354,6 @@ export default function CreditsPage({
           }).`
         : 'Limite de crédit désactivée (aucun plafond).';
     setMessageSucces(msg);
-    toast.succes('Limite de crédit enregistrée', msg);
     setTimeout(() => setMessageSucces(''), 4000);
   };
 
@@ -447,7 +441,7 @@ export default function CreditsPage({
             <button
               type="button"
               onClick={() => setVueCredits('factures')}
-              className={`h-7 rounded-md px-2 text-[11px] font-semibold transition-colors ${
+              className={`h-8 rounded-md px-2.5 text-xs font-semibold transition-colors ${
                 vueCredits === 'factures'
                   ? 'bg-[#0A3072] text-white shadow-sm dark:bg-blue-700'
                   : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
@@ -458,13 +452,13 @@ export default function CreditsPage({
             <button
               type="button"
               onClick={() => setVueCredits('clients')}
-              className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-semibold transition-colors ${
+              className={`inline-flex h-8 items-center gap-1 rounded-md px-2.5 text-xs font-semibold transition-colors ${
                 vueCredits === 'clients'
                   ? 'bg-[#0A3072] text-white shadow-sm dark:bg-blue-700'
                   : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
               }`}
             >
-              <Users className="h-3 w-3" />
+              <Users className="h-3.5 w-3.5" />
               Par client ({clientsCumules.length})
             </button>
           </div>
@@ -483,7 +477,7 @@ export default function CreditsPage({
                   key={tab.id}
                   type="button"
                   onClick={() => setFiltreStatut(tab.id)}
-                  className={`h-7 rounded-md px-2 text-[11px] font-semibold transition-colors ${
+                  className={`h-8 rounded-md px-2.5 text-xs font-semibold transition-colors ${
                     filtreStatut === tab.id
                       ? tab.id === 'en_retard'
                         ? 'bg-red-600 text-white shadow-sm'
@@ -503,13 +497,13 @@ export default function CreditsPage({
             <button
               type="button"
               onClick={() => setModalLimiteOuverte(true)}
-              className={`inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-[11px] font-semibold transition-colors ${
+              className={`inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold transition-colors ${
                 limiteActive > 0
                   ? 'border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100 dark:border-orange-900/50 dark:bg-orange-950/40 dark:text-orange-300 dark:hover:bg-orange-950/60'
                   : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'
               }`}
             >
-              <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+              <ShieldCheck className="h-4 w-4 shrink-0" />
               {limiteActive > 0
                 ? `Limite : ${formatPrix(limiteActive, parametres.devise)}`
                 : 'Limiter le crédit'}
@@ -572,9 +566,9 @@ export default function CreditsPage({
                       {c.telephone && (
                         <a
                           href={getLienAppel(c.telephone)}
-                          className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                          className="flex h-9 flex-1 items-center justify-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                         >
-                          <Phone className="h-3 w-3 text-blue-700 dark:text-blue-400" />
+                          <Phone className="h-3.5 w-3.5 text-blue-700 dark:text-blue-400" />
                           Appeler
                         </a>
                       )}
@@ -582,9 +576,9 @@ export default function CreditsPage({
                         href={getLienWhatsAppClientTotal(c)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg bg-[#16A34A] px-2 text-xs font-semibold text-white hover:bg-[#15803D]"
+                        className="flex h-9 flex-1 items-center justify-center gap-1 rounded-lg bg-[#16A34A] px-2.5 text-xs font-semibold text-white hover:bg-[#15803D]"
                       >
-                        <MessageCircle className="h-3 w-3" />
+                        <MessageCircle className="h-3.5 w-3.5" />
                         Relance totale
                       </a>
                       <button
@@ -594,9 +588,9 @@ export default function CreditsPage({
                           setFiltreStatut('en_cours');
                           setVueCredits('factures');
                         }}
-                        className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg bg-[#0A3072] px-2 text-xs font-semibold text-white hover:bg-blue-900 dark:bg-blue-700 dark:hover:bg-blue-600"
+                        className="flex h-9 flex-1 items-center justify-center gap-1 rounded-lg bg-[#0A3072] px-2.5 text-xs font-semibold text-white hover:bg-blue-900 dark:bg-blue-700 dark:hover:bg-blue-600"
                       >
-                        <Eye className="h-3 w-3" />
+                        <Eye className="h-3.5 w-3.5" />
                         Factures
                       </button>
                     </div>
@@ -684,9 +678,9 @@ export default function CreditsPage({
                               href={getLienWhatsAppClientTotal(c)}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex h-7 items-center gap-1 rounded-md bg-[#16A34A] px-2 text-[11px] font-semibold text-white hover:bg-[#15803D]"
+                              className="inline-flex h-8 items-center gap-1 rounded-md bg-[#16A34A] px-2.5 text-xs font-semibold text-white hover:bg-[#15803D]"
                             >
-                              <MessageCircle className="h-3 w-3" />
+                              <MessageCircle className="h-3.5 w-3.5" />
                               WhatsApp total
                             </a>
                             <button
@@ -696,9 +690,9 @@ export default function CreditsPage({
                                 setFiltreStatut('en_cours');
                                 setVueCredits('factures');
                               }}
-                              className="inline-flex h-7 items-center gap-1 rounded-md bg-[#0A3072] px-2 text-[11px] font-semibold text-white hover:bg-blue-900 dark:bg-blue-700 dark:hover:bg-blue-600"
+                              className="inline-flex h-8 items-center gap-1 rounded-md bg-[#0A3072] px-2.5 text-xs font-semibold text-white hover:bg-blue-900 dark:bg-blue-700 dark:hover:bg-blue-600"
                             >
-                              <Eye className="h-3 w-3" />
+                              <Eye className="h-3.5 w-3.5" />
                               Voir factures
                             </button>
                           </div>
@@ -803,9 +797,9 @@ export default function CreditsPage({
                     {v.clientTelephone && (
                       <a
                         href={getLienAppel(v.clientTelephone)}
-                        className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                        className="flex h-9 flex-1 items-center justify-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                       >
-                        <Phone className="h-3 w-3 text-blue-700 dark:text-blue-400" />
+                        <Phone className="h-3.5 w-3.5 text-blue-700 dark:text-blue-400" />
                         Appeler
                       </a>
                     )}
@@ -813,10 +807,10 @@ export default function CreditsPage({
                       href={getLienWhatsApp(v.clientTelephone, v, reste)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg bg-[#16A34A] px-2 text-xs font-semibold text-white hover:bg-[#15803D]"
+                      className="flex h-9 flex-1 items-center justify-center gap-1 rounded-lg bg-[#16A34A] px-2.5 text-xs font-semibold text-white hover:bg-[#15803D]"
                       title={`Envoyer un rappel WhatsApp à ${v.clientNom}`}
                     >
-                      <MessageCircle className="h-3 w-3" />
+                      <MessageCircle className="h-3.5 w-3.5" />
                       WhatsApp
                     </a>
                   </div>
@@ -826,28 +820,28 @@ export default function CreditsPage({
                       <button
                         type="button"
                         onClick={() => ouvrirEncaissement(v)}
-                        className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg bg-emerald-600 px-2 text-xs font-semibold text-white hover:bg-emerald-700"
+                        className="flex h-9 flex-1 items-center justify-center gap-1 rounded-lg bg-emerald-600 px-2.5 text-xs font-semibold text-white hover:bg-emerald-700"
                       >
-                        <Wallet className="h-3 w-3" />
+                        <Wallet className="h-3.5 w-3.5" />
                         Encaisser
                       </button>
                     )}
                     <button
                       type="button"
                       onClick={() => setVenteDetail(v)}
-                      className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg bg-blue-600 px-2 text-xs font-semibold text-white hover:bg-blue-700"
+                      className="flex h-9 flex-1 items-center justify-center gap-1 rounded-lg bg-blue-600 px-2.5 text-xs font-semibold text-white hover:bg-blue-700"
                     >
-                      <Eye className="h-3 w-3" />
+                      <Eye className="h-3.5 w-3.5" />
                       Détail
                     </button>
                     {peutSupprimer && (
                       <button
                         type="button"
                         onClick={() => setCibleSuppression(v)}
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-600 text-xs font-semibold text-white hover:bg-red-700"
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-600 text-xs font-semibold text-white hover:bg-red-700"
                         aria-label={`Supprimer ${v.numeroFacture}`}
                       >
-                        <Trash2 className="h-3 w-3" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     )}
                   </div>
@@ -966,44 +960,44 @@ export default function CreditsPage({
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-3 py-2.5">
-                        <div className="flex items-center justify-center gap-1">
+                        <div className="flex items-center justify-center gap-1.5">
                           <a
                             href={getLienWhatsApp(v.clientTelephone, v, reste)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex h-7 items-center gap-1 rounded-md bg-[#16A34A] px-2 text-[11px] font-semibold text-white hover:bg-[#15803D]"
+                            className="inline-flex h-8 items-center gap-1 rounded-md bg-[#16A34A] px-2.5 text-xs font-semibold text-white hover:bg-[#15803D]"
                             title={`Envoyer un rappel WhatsApp à ${v.clientNom}`}
                           >
-                            <MessageCircle className="h-3 w-3" />
+                            <MessageCircle className="h-3.5 w-3.5" />
                             WhatsApp
                           </a>
                           {!estSolde && (
                             <button
                               type="button"
                               onClick={() => ouvrirEncaissement(v)}
-                              className="inline-flex h-7 items-center gap-1 rounded-md bg-emerald-600 px-2 text-[11px] font-semibold text-white hover:bg-emerald-700"
+                              className="inline-flex h-8 items-center gap-1 rounded-md bg-emerald-600 px-2.5 text-xs font-semibold text-white hover:bg-emerald-700"
                             >
-                              <Wallet className="h-3 w-3" />
+                              <Wallet className="h-3.5 w-3.5" />
                               Encaisser
                             </button>
                           )}
                           <button
                             type="button"
                             onClick={() => setVenteDetail(v)}
-                            className="inline-flex h-7 items-center gap-1 rounded-md bg-blue-600 px-2 text-[11px] font-semibold text-white hover:bg-blue-700"
+                            className="inline-flex h-8 items-center gap-1 rounded-md bg-blue-600 px-2.5 text-xs font-semibold text-white hover:bg-blue-700"
                           >
-                            <Eye className="h-3 w-3" />
+                            <Eye className="h-3.5 w-3.5" />
                             Détail
                           </button>
                           {peutSupprimer && (
                             <button
                               type="button"
                               onClick={() => setCibleSuppression(v)}
-                              className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-red-600 text-white hover:bg-red-700"
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-red-600 text-white hover:bg-red-700"
                               title="Supprimer cette facture"
                               aria-label={`Supprimer ${v.numeroFacture}`}
                             >
-                              <Trash2 className="h-3 w-3" />
+                              <Trash2 className="h-3.5 w-3.5" />
                             </button>
                           )}
                         </div>
@@ -1129,15 +1123,15 @@ export default function CreditsPage({
                     <button
                       type="button"
                       onClick={() => setVenteAEncaisser(null)}
-                      className="h-8 flex-1 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                      className="h-9 flex-1 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 sm:text-sm dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
                     >
                       Annuler
                     </button>
                     <button
                       type="submit"
-                      className="inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-xs font-semibold text-white hover:bg-emerald-700"
+                      className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-xs font-semibold text-white hover:bg-emerald-700 sm:text-sm"
                     >
-                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      <CheckCircle2 className="h-4 w-4" />
                       Valider le paiement
                     </button>
                   </div>
@@ -1201,9 +1195,9 @@ export default function CreditsPage({
                     {venteDetailCourante.clientTelephone && (
                       <a
                         href={getLienAppel(venteDetailCourante.clientTelephone)}
-                        className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-blue-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-blue-400 dark:hover:bg-slate-700"
+                        className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-blue-700 hover:bg-slate-50 sm:text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-blue-400 dark:hover:bg-slate-700"
                       >
-                        <Phone className="h-3.5 w-3.5" />
+                        <Phone className="h-4 w-4" />
                         Appeler
                       </a>
                     )}
@@ -1215,9 +1209,9 @@ export default function CreditsPage({
                       )}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#16A34A] px-3 text-xs font-semibold text-white hover:bg-[#15803D]"
+                      className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#16A34A] px-3 text-xs font-semibold text-white hover:bg-[#15803D] sm:text-sm"
                     >
-                      <MessageCircle className="h-3.5 w-3.5" />
+                      <MessageCircle className="h-4 w-4" />
                       WhatsApp
                     </a>
                     {reste > 0 && (
@@ -1228,9 +1222,9 @@ export default function CreditsPage({
                             setVenteDetail(null);
                             ouvrirEditionEcheance(venteDetailCourante);
                           }}
-                          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-3 text-xs font-semibold text-orange-700 hover:bg-orange-100 dark:border-orange-900/50 dark:bg-orange-950/40 dark:text-orange-300 dark:hover:bg-orange-950/60"
+                          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-3 text-xs font-semibold text-orange-700 hover:bg-orange-100 sm:text-sm dark:border-orange-900/50 dark:bg-orange-950/40 dark:text-orange-300 dark:hover:bg-orange-950/60"
                         >
-                          <Calendar className="h-3.5 w-3.5" />
+                          <Calendar className="h-4 w-4" />
                           Modifier l&apos;échéance
                         </button>
                         <button
@@ -1239,9 +1233,9 @@ export default function CreditsPage({
                             setVenteDetail(null);
                             ouvrirEncaissement(venteDetailCourante);
                           }}
-                          className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-xs font-semibold text-white hover:bg-emerald-700"
+                          className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-xs font-semibold text-white hover:bg-emerald-700 sm:text-sm"
                         >
-                          <Wallet className="h-3.5 w-3.5" />
+                          <Wallet className="h-4 w-4" />
                           Encaisser un versement
                         </button>
                       </>
@@ -1249,23 +1243,23 @@ export default function CreditsPage({
                     <button
                       type="button"
                       onClick={() => gererPdf(venteDetailCourante)}
-                      className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                      className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 sm:text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                     >
-                      <Download className="h-3.5 w-3.5" />
+                      <Download className="h-4 w-4" />
                       PDF
                     </button>
                     <button
                       type="button"
                       onClick={() => gererImpression(venteDetailCourante)}
-                      className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#0A3072] px-3 text-xs font-semibold text-white hover:bg-blue-900 dark:bg-blue-700 dark:hover:bg-blue-600"
+                      className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#0A3072] px-3 text-xs font-semibold text-white hover:bg-blue-900 sm:text-sm dark:bg-blue-700 dark:hover:bg-blue-600"
                     >
-                      <Printer className="h-3.5 w-3.5" />
+                      <Printer className="h-4 w-4" />
                       Imprimer
                     </button>
                     <button
                       type="button"
                       onClick={() => setVenteDetail(null)}
-                      className="h-8 rounded-lg bg-slate-900 px-3 text-xs font-semibold text-white hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700"
+                      className="h-9 rounded-lg bg-slate-900 px-3.5 text-xs font-semibold text-white hover:bg-slate-800 sm:text-sm dark:bg-slate-800 dark:hover:bg-slate-700"
                     >
                       Fermer
                     </button>
@@ -1324,7 +1318,7 @@ export default function CreditsPage({
                   <button
                     type="button"
                     onClick={() => setModeLimiteInput('par_client')}
-                    className={`h-7 rounded-md px-2.5 text-xs font-semibold transition-colors ${
+                    className={`h-8 rounded-md px-2.5 text-xs font-semibold transition-colors ${
                       modeLimiteInput === 'par_client'
                         ? 'bg-white text-[#0A3072] shadow-sm dark:bg-slate-900 dark:text-blue-400'
                         : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
@@ -1335,7 +1329,7 @@ export default function CreditsPage({
                   <button
                     type="button"
                     onClick={() => setModeLimiteInput('globale')}
-                    className={`h-7 rounded-md px-2.5 text-xs font-semibold transition-colors ${
+                    className={`h-8 rounded-md px-2.5 text-xs font-semibold transition-colors ${
                       modeLimiteInput === 'globale'
                         ? 'bg-white text-[#0A3072] shadow-sm dark:bg-slate-900 dark:text-blue-400'
                         : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
@@ -1355,15 +1349,15 @@ export default function CreditsPage({
                 <button
                   type="button"
                   onClick={() => setModalLimiteOuverte(false)}
-                  className="h-8 flex-1 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                  className="h-9 flex-1 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 sm:text-sm dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
-                  className="inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg bg-orange-600 px-3 text-xs font-semibold text-white hover:bg-orange-700"
+                  className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-orange-600 px-3 text-xs font-semibold text-white hover:bg-orange-700 sm:text-sm"
                 >
-                  <Save className="h-3.5 w-3.5" />
+                  <Save className="h-4 w-4" />
                   Enregistrer la limite
                 </button>
               </div>
@@ -1418,7 +1412,7 @@ export default function CreditsPage({
                         key={r.id}
                         type="button"
                         onClick={() => setDateEcheanceEdit(r.date)}
-                        className={`h-7 rounded-md border px-2 text-[11px] font-semibold transition-colors ${
+                        className={`h-8 rounded-md border px-2.5 text-xs font-semibold transition-colors ${
                           actif
                             ? 'border-orange-500 bg-orange-500 text-white shadow-sm'
                             : 'border-slate-200 bg-white text-slate-700 hover:border-orange-300 hover:bg-orange-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-orange-500/60 dark:hover:bg-orange-950/40'
@@ -1441,15 +1435,15 @@ export default function CreditsPage({
                 <button
                   type="button"
                   onClick={() => setVenteEcheanceEnEdition(null)}
-                  className="h-8 flex-1 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                  className="h-9 flex-1 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 sm:text-sm dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
-                  className="inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#0A3072] px-3 text-xs font-semibold text-white hover:bg-blue-900 dark:bg-blue-700 dark:hover:bg-blue-600"
+                  className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#0A3072] px-3 text-xs font-semibold text-white hover:bg-blue-900 sm:text-sm dark:bg-blue-700 dark:hover:bg-blue-600"
                 >
-                  <Save className="h-3.5 w-3.5" />
+                  <Save className="h-4 w-4" />
                   Enregistrer
                 </button>
               </div>

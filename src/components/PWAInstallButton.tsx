@@ -15,9 +15,9 @@ export default function PWAInstallButton() {
       <button
         type="button"
         onClick={installer}
-        className="inline-flex h-6 shrink-0 items-center gap-1 rounded-md bg-blue-700 px-1.5 text-[10px] font-semibold text-white transition-colors hover:bg-blue-800 whitespace-nowrap sm:px-2"
+        className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-lg bg-blue-700 px-2.5 text-[11px] font-semibold text-white transition-colors hover:bg-blue-800 whitespace-nowrap sm:px-3"
       >
-        <Download className="h-2.5 w-2.5" />
+        <Download className="h-3.5 w-3.5" />
         <span className="sm:hidden">Installer</span>
         <span className="hidden sm:inline">Installer l&apos;app</span>
       </button>
@@ -30,9 +30,9 @@ export default function PWAInstallButton() {
         <button
           type="button"
           onClick={() => setAideIOSOuverte(true)}
-          className="inline-flex h-6 shrink-0 items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-1.5 text-[10px] font-semibold text-[#0A3072] hover:bg-blue-100 whitespace-nowrap dark:border-blue-800/70 dark:bg-blue-950/50 dark:text-blue-300 dark:hover:bg-blue-900/50 sm:px-2"
+          className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-2.5 text-[11px] font-semibold text-[#0A3072] hover:bg-blue-100 whitespace-nowrap dark:border-blue-800/70 dark:bg-blue-950/50 dark:text-blue-300 dark:hover:bg-blue-900/50 sm:px-3"
         >
-          <Download className="h-2.5 w-2.5" />
+          <Download className="h-3.5 w-3.5" />
           <span className="sm:hidden">App iOS</span>
           <span className="hidden sm:inline">Installer sur iPhone</span>
         </button>
@@ -64,7 +64,7 @@ export default function PWAInstallButton() {
               <button
                 type="button"
                 onClick={() => setAideIOSOuverte(false)}
-                className="mt-4 h-8 w-full rounded-lg bg-[#0A3072] px-3 text-xs font-semibold text-white hover:bg-blue-900"
+                className="mt-4 h-9 w-full rounded-lg bg-[#0A3072] px-3.5 text-xs font-semibold text-white hover:bg-blue-900 sm:text-sm"
               >
                 Compris
               </button>

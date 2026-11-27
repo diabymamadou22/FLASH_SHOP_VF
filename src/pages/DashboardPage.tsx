@@ -117,14 +117,14 @@ export default function DashboardPage({ donnees, role, onAllerPage }: DashboardP
       </div>
 
       {/* Raccourcis d'action filtrés selon le rôle */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2.5">
         {peutAccederPage(role, 'caisse') && (
           <button
             type="button"
             onClick={() => onAllerPage('caisse')}
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-blue-700 px-3 text-xs font-semibold text-white hover:bg-blue-800"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-blue-700 px-3.5 text-xs font-semibold text-white hover:bg-blue-800 sm:text-sm"
           >
-            <ShoppingCart className="h-3.5 w-3.5" />
+            <ShoppingCart className="h-4 w-4" />
             Ouvrir la caisse
           </button>
         )}
@@ -132,9 +132,9 @@ export default function DashboardPage({ donnees, role, onAllerPage }: DashboardP
           <button
             type="button"
             onClick={() => onAllerPage('produits')}
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-800 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 sm:text-sm"
           >
-            <Package className="h-3.5 w-3.5" />
+            <Package className="h-4 w-4" />
             Gérer les produits
           </button>
         )}
@@ -142,9 +142,9 @@ export default function DashboardPage({ donnees, role, onAllerPage }: DashboardP
           <button
             type="button"
             onClick={() => onAllerPage('credits')}
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-3 text-xs font-semibold text-orange-700 hover:bg-orange-100 dark:border-orange-800/70 dark:bg-orange-950/40 dark:text-orange-300 dark:hover:bg-orange-900/40"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-3.5 text-xs font-semibold text-orange-700 hover:bg-orange-100 dark:border-orange-800/70 dark:bg-orange-950/40 dark:text-orange-300 dark:hover:bg-orange-900/40 sm:text-sm"
           >
-            <CreditCard className="h-3.5 w-3.5" />
+            <CreditCard className="h-4 w-4" />
             Gérer les crédits ({resume.nbCreditsOuverts})
           </button>
         )}
@@ -152,9 +152,9 @@ export default function DashboardPage({ donnees, role, onAllerPage }: DashboardP
           <button
             type="button"
             onClick={() => onAllerPage('stocks')}
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-800 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 sm:text-sm"
           >
-            <Boxes className="h-3.5 w-3.5" />
+            <Boxes className="h-4 w-4" />
             Entrée de stock
           </button>
         )}

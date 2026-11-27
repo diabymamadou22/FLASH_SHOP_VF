@@ -45,9 +45,7 @@ export default function CategoriesPage({
   const soumettre = (e: FormEvent) => {
     e.preventDefault();
     if (!nom.trim()) {
-      const msg = 'Le nom de la catégorie est obligatoire.';
-      setMessageErreur(msg);
-      toast.erreur('Champ requis', msg);
+      setMessageErreur('Le nom de la catégorie est obligatoire.');
       return;
     }
 
@@ -136,16 +134,16 @@ export default function CategoriesPage({
           <div className="flex gap-2">
             <button
               type="submit"
-              className="inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg bg-blue-700 px-3 text-xs font-semibold text-white hover:bg-blue-800"
+              className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-blue-700 px-3.5 text-xs font-semibold text-white hover:bg-blue-800 sm:text-sm"
             >
-              <Plus className="h-3.5 w-3.5" />
+              <Plus className="h-4 w-4" />
               {categorieEnEdition ? 'Mettre à jour' : 'Ajouter'}
             </button>
             {categorieEnEdition && (
               <button
                 type="button"
                 onClick={annulerEdition}
-                className="h-8 rounded-lg border border-slate-200 px-3 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                className="h-9 rounded-lg border border-slate-200 px-3.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 sm:text-sm"
               >
                 Annuler
               </button>
@@ -186,18 +184,18 @@ export default function CategoriesPage({
                   <button
                     type="button"
                     onClick={() => demarrerEdition(cat)}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
                     aria-label={`Modifier ${cat.nom}`}
                   >
-                    <Pencil className="h-3.5 w-3.5" />
+                    <Pencil className="h-4 w-4" />
                   </button>
                   <button
                     type="button"
                     onClick={() => tenterSuppression(cat)}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-600 text-white hover:bg-red-700"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-600 text-white hover:bg-red-700"
                     aria-label={`Supprimer ${cat.nom}`}
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               </div>
@@ -239,20 +237,20 @@ export default function CategoriesPage({
                         <button
                           type="button"
                           onClick={() => demarrerEdition(cat)}
-                          className="rounded-lg bg-indigo-600 p-1.5 text-white hover:bg-indigo-700"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
                           title="Modifier"
                           aria-label={`Modifier ${cat.nom}`}
                         >
-                          <Pencil className="h-3.5 w-3.5" />
+                          <Pencil className="h-4 w-4" />
                         </button>
                         <button
                           type="button"
                           onClick={() => tenterSuppression(cat)}
-                          className="rounded-lg bg-red-600 p-1.5 text-white hover:bg-red-700"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-red-600 text-white hover:bg-red-700"
                           title="Supprimer"
                           aria-label={`Supprimer ${cat.nom}`}
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
                     </td>
